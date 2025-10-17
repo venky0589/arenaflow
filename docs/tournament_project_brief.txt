@@ -1,0 +1,445 @@
+# Badminton Tournament Manager - Comprehensive Project Brief
+
+## Project Overview
+
+A full-stack tournament management system designed for badminton competitions, enabling tournament organization, player registration, match scheduling, live scoring, and bracket management across three platforms: Admin Web, User Web, and Mobile App.
+
+---
+
+## Technology Stack
+
+### Backend
+- **Framework**: Spring Boot 3.3 with Maven
+- **Database**: PostgreSQL with Flyway migrations
+- **Security**: JWT-based authentication with role-based access control (RBAC)
+- **API Documentation**: OpenAPI/Swagger
+- **Testing**: JUnit 5 with H2 for integration tests
+
+### Admin UI
+- **Framework**: React + Vite + TypeScript
+- **UI Library**: Material-UI (MUI) with DataGrid
+- **Forms**: Formik for form management
+- **HTTP Client**: Axios with JWT token management
+
+### User UI
+- **Framework**: React + Vite + TypeScript
+- **UI Library**: Material-UI (MUI)
+- **Routing**: React Router
+- **HTTP Client**: Axios with JWT token management
+
+### Mobile App
+- **Framework**: Expo React Native
+- **Navigation**: React Navigation
+- **Storage**: AsyncStorage for JWT persistence
+- **HTTP Client**: Axios
+
+### DevOps
+- **Containerization**: Docker Compose (PostgreSQL + Mailpit)
+- **API Testing**: Postman collection included
+- **Seeding**: SQL seed data for development
+
+---
+
+## Current Implementation Status
+
+### ✅ COMPLETED FEATURES
+
+#### Backend (Spring Boot)
+1. **Authentication System**
+   - JWT-based login and registration endpoints
+   - Token generation and validation
+   - Pre-seeded admin user (admin@example.com / admin123)
+
+2. **Core Entities**
+   - `Tournament`: Tournament metadata and configuration
+   - `Player`: Player profiles and information
+   - `Court`: Court management for match assignment
+   - `Match`: Match details, scores, and status
+   - `Registration`: Player tournament registrations
+   - `UserAccount`: User authentication and profile data
+
+3. **CRUD APIs**
+   - Complete REST endpoints for all entities
+   - OpenAPI documentation available at `/swagger-ui/index.html`
+   - Standard CRUD operations: Create, Read, Update, Delete
+
+4. **Database Setup**
+   - Flyway migration scripts (V1__init.sql)
+   - Seed data with sample tournaments, players, courts
+   - PostgreSQL configured with connection pooling
+
+5. **Development Infrastructure**
+   - Docker Compose setup for local development
+   - Mailpit for email testing
+   - Postman collection for API testing
+
+#### Admin UI (React)
+1. **Authentication**
+   - Login page with JWT token management
+   - Token stored in localStorage
+   - Automatic token injection in API requests
+   - Logout functionality
+
+2. **CRUD Interfaces**
+   - **Tournaments**: Create, edit, view all tournaments
+   - **Players**: Manage player database
+   - **Courts**: Court configuration and management
+   - **Matches**: Match creation and editing
+   - **Registrations**: View and manage registrations
+
+3. **UI Components**
+   - MUI DataGrid for list views
+   - Double-click to edit functionality
+   - Create/New buttons for adding records
+   - Form dialogs with validation
+   - Refresh data functionality
+
+#### User UI (React)
+1. **Authentication**
+   - User login with JWT
+   - Token persistence
+
+2. **Tournament Features**
+   - Browse available tournaments
+   - Register for tournaments (select player & category)
+   - View tournament details
+
+3. **Match Information**
+   - View match schedules
+   - See court assignments
+   - Check live scores and status
+
+4. **User Dashboard**
+   - "My Registrations" page (shows all registrations)
+   - Navigation layout with routing
+
+5. **Placeholder Pages**
+   - Brackets page (UI exists, functionality pending)
+
+#### Mobile App (Expo React Native)
+1. **Authentication**
+   - Login screen with JWT
+   - Token stored in AsyncStorage
+   - Persistent authentication state
+
+2. **Tournament Features**
+   - Browse tournament list
+   - Quick register for SINGLES category
+   - View tournament details
+
+3. **Check-In Feature**
+   - Local UI toggle for player check-in
+   - (Note: Not persisted to backend yet)
+
+4. **Scoring Interface**
+   - Court-side scoring screen
+   - Increment P1/P2 scores with buttons
+   - Score updates sent via PUT to backend
+   - Currently shows first match only
+
+---
+
+## ⏳ PENDING FEATURES FOR MVP
+
+### High Priority (MVP Blockers)
+
+#### 1. Draw Generation & Bracket Management (5-7 days)
+**What's Missing**:
+- Automatic match generation from registrations
+- Seeding algorithm for fair player distribution
+- Bracket structure creation (knockout/round-robin)
+- Winner progression logic
+- Round management
+
+**Required Implementation**:
+- Backend service: `generateDraw(tournamentId, categoryId)`
+- Match pairing algorithm based on seedings
+- Bracket tree data structure
+- Admin UI: "Generate Bracket" button
+- User UI: Interactive bracket visualization (tree view)
+- Mobile: Score updates should trigger winner advancement
+
+#### 2. Match Scheduling & Court Assignment (3-4 days)
+**What's Missing**:
+- Intelligent court allocation
+- Time slot management
+- Conflict detection (same player, same court)
+- Schedule optimization
+
+**Required Implementation**:
+- Backend: Scheduling algorithm with constraints
+- Match entity: Add `scheduledTime`, `duration` fields
+- Admin UI: Schedule editor with date/time pickers
+- Admin UI: Drag-drop court assignment
+- User UI: Schedule view filtered by court and time
+- Conflict warnings and resolution
+
+#### 3. Relational Field Improvements (2-3 days)
+**What's Missing**:
+- User-friendly dropdowns instead of raw ID inputs
+- Real-time data loading in forms
+
+**Required Implementation**:
+- Replace all ID text fields with searchable dropdowns
+- Match form: Select tournament, court, player1, player2 from dropdowns
+- Registration form: Select tournament and player from lists
+- Auto-complete for player search
+- Cascading dropdowns (e.g., categories depend on tournament)
+
+#### 4. Check-In API Persistence (2-3 days)
+**What's Missing**:
+- Backend persistence of check-in status
+- Check-in validation and business logic
+
+**Required Implementation**:
+- Add `checkedIn` boolean to Registration entity
+- POST/PUT endpoint: `/registrations/{id}/check-in`
+- Validation: Only allow check-in within time window
+- Admin UI: Check-in status column in registrations grid
+- Mobile: Sync check-in state with backend
+- Notifications for missing check-ins
+
+#### 5. Role-Based Access Control (3-4 days)
+**What's Missing**:
+- Proper role enforcement across all platforms
+- Role-specific UI elements and routes
+
+**Required Implementation**:
+- Roles: `ADMIN`, `REFEREE`, `USER`
+- Backend: `@PreAuthorize` annotations on endpoints
+- Admin UI: Only accessible to ADMIN role
+- Mobile: Referee role shows only scoring/check-in screens
+- User UI: Hide admin features from regular users
+- Role-based menu and navigation
+- Login should return user role with JWT
+
+---
+
+## 🎯 NICE-TO-HAVE FEATURES (V2+)
+
+### Medium Priority
+
+#### 6. Notification System (3-5 days)
+- Email confirmation on registration (leverage Mailpit)
+- Match reminder emails
+- Score update notifications
+- Expo Push Notifications for mobile
+- Tournament announcement broadcasts
+
+#### 7. Real-Time Updates (3-4 days)
+- WebSocket or Server-Sent Events (SSE) implementation
+- Live score updates in User UI without refresh
+- Bracket updates in real-time
+- Court status indicators
+- Live match feed
+
+#### 8. Payment Integration (5-7 days)
+- Razorpay or Stripe integration
+- Registration fee collection
+- Payment status tracking
+- Transaction history in Admin UI
+- Refund management
+
+#### 9. Reporting & Analytics (2-3 days)
+- CSV export for registrations and results
+- PDF bracket generation
+- Tournament statistics dashboard
+- Player performance analytics
+- Financial reports
+
+#### 10. Deployment & CI/CD (3-4 days)
+- Dockerfiles for all services
+- GitHub Actions workflows
+- Automated testing pipeline
+- Cloud deployment (AWS/Render/Fly.io)
+- Environment management
+- Monitoring and logging
+
+---
+
+## Architecture & Design Patterns
+
+### Backend Architecture
+- **Layered Architecture**: Controller → Service → Repository
+- **DTOs**: Separate request/response objects from entities
+- **MapStruct**: Entity-DTO mapping (if used)
+- **Exception Handling**: Global exception handler
+- **Validation**: Bean Validation annotations
+
+### Frontend Architecture
+- **Component-Based**: Reusable React components
+- **Container/Presenter Pattern**: Smart vs. presentational components
+- **API Layer**: Centralized Axios configuration
+- **State Management**: React Context or simple prop drilling
+- **Protected Routes**: Auth guards for secure pages
+
+### Mobile Architecture
+- **Screen-Based Navigation**: React Navigation stack
+- **API Client**: Configured Axios instance
+- **Offline-First Considerations**: AsyncStorage for caching
+- **Platform Differences**: Android emulator (10.0.2.2) vs. iOS/device
+
+---
+
+## Database Schema Overview
+
+### Core Tables
+1. **user_account**: Authentication and user profiles
+2. **tournament**: Tournament metadata
+3. **player**: Player information
+4. **court**: Court configuration
+5. **category**: Tournament categories (singles/doubles, age groups)
+6. **registration**: Player tournament registrations
+7. **match**: Match details and scores
+
+### Key Relationships
+- Tournament → Many Registrations
+- Tournament → Many Matches
+- Player → Many Registrations
+- Match → Belongs to Tournament
+- Match → References Player1, Player2
+- Match → Assigned to Court
+
+---
+
+## Development Setup
+
+### Prerequisites
+- Java 17+
+- Maven 3.9+
+- Node.js 18+
+- Docker & Docker Compose
+- Android Studio (for mobile testing)
+- Git
+
+### Quick Start Commands
+
+#### Backend
+```bash
+cd backend
+docker compose up -d           # Start PostgreSQL
+mvn spring-boot:run            # Run Spring Boot
+# Access: http://localhost:8080/swagger-ui/index.html
+```
+
+#### Admin UI
+```bash
+cd admin-ui
+cp .env.example .env
+npm install
+npm run dev                    # Runs on port 5173
+```
+
+#### User UI
+```bash
+cd user-ui
+cp .env.example .env
+npm install
+npm run dev                    # Runs on port 5174
+```
+
+#### Mobile App
+```bash
+cd mobile-app
+npm install
+npm start                      # Choose Android/iOS
+# Android emulator: http://10.0.2.2:8080
+# Physical device: http://YOUR_LAN_IP:8080
+```
+
+---
+
+## Testing Strategy
+
+### Current Testing
+- H2 in-memory database for backend integration tests
+- Basic JUnit 5 test structure
+
+### Recommended Testing (To Implement)
+- **Backend**: 
+  - Unit tests for services (70%+ coverage)
+  - Integration tests with Testcontainers
+  - API contract testing
+- **Frontend**: 
+  - Jest for unit tests
+  - React Testing Library for component tests
+  - Cypress or Playwright for E2E tests
+- **Mobile**: 
+  - Jest for logic tests
+  - Detox for E2E testing (optional)
+
+---
+
+## Security Considerations
+
+### Implemented
+- JWT authentication
+- Password hashing (assumed with Spring Security)
+- CORS configuration
+
+### To Implement/Review
+- Rate limiting on auth endpoints
+- Input validation on all endpoints
+- SQL injection prevention (use parameterized queries)
+- XSS protection in frontends
+- CSRF tokens for state-changing operations
+- Secure password reset flow
+- API key management for third-party services
+- Audit logging for sensitive operations
+
+---
+
+## Performance Considerations
+
+### Current Approach
+- Basic pagination in DataGrid
+- Simple CRUD operations
+
+### Recommended Optimizations
+- Database indexing on frequently queried fields
+- Lazy loading for large datasets
+- Caching for tournament data (Redis)
+- Query optimization and N+1 prevention
+- Image/file upload optimization
+- Mobile app bundle size optimization
+- API response compression
+
+---
+
+## Estimated Timeline to MVP
+
+**Current Status**: ~40% complete (infrastructure + basic CRUD)
+
+**Remaining MVP Work**: 15-18 working days
+- Week 1: Draw generation + bracket visualization + relational fields
+- Week 2: Match scheduling + court assignment + check-in API
+- Week 3: Role-based auth + QA + integration testing
+
+**Total Project**: 4-5 weeks from current state to production-ready MVP
+
+---
+
+## Success Criteria for MVP
+
+1. ✅ Admin can create tournaments with multiple categories
+2. ✅ Admin can manage player database
+3. ⏳ Admin can generate tournament brackets automatically
+4. ⏳ Admin can schedule matches with court assignments
+5. ✅ Users can register for tournaments
+6. ⏳ Users can view interactive brackets
+7. ✅ Users can see match schedules
+8. ⏳ Referees can check in players via mobile
+9. ✅ Referees can update scores in real-time via mobile
+10. ⏳ System enforces role-based permissions
+
+**7/10 criteria met** - Focus on items marked ⏳ for MVP completion.
+
+---
+
+## Next Immediate Steps
+
+1. Implement draw generation algorithm
+2. Create bracket visualization component
+3. Enhance forms with dropdown selects
+4. Add check-in persistence
+5. Implement role-based access control

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CopilotDiffPersistence">
+    <option name="pendingDiffs">
+      <map>
+        <entry key="$PROJECT_DIR$/backend/src/main/resources/db/migration/V2__seed.sql">
+          <value>
+            <PendingDiffInfo>
+              <option name="filePath" value="$PROJECT_DIR$/backend/src/main/resources/db/migration/V2__seed.sql" />
+              <option name="updatedContent" value="-- Seed initial data via Flyway (idempotent where possible)&#10;&#10;-- Tournaments&#10;INSERT INTO tournament(name, location, start_date, end_date) VALUES&#10;('City Open', 'Hyderabad', '2025-10-01', '2025-10-05'),&#10;('Winter Cup', 'Bengaluru', '2025-12-10', '2025-12-12');&#10;&#10;-- Players&#10;INSERT INTO player(first_name, last_name, gender, phone) VALUES&#10;('Saina', 'K', 'F', '9000000001'),&#10;('Sindhu', 'P', 'F', '9000000002'),&#10;('Srikanth', 'K', 'M', '9000000003'),&#10;('Lakshya', 'S', 'M', '9000000004');&#10;&#10;-- Courts (unique by name)&#10;INSERT INTO court(name, location_note) VALUES&#10;('Court 1', 'Main Hall'),&#10;('Court 2', 'Main Hall')&#10;ON CONFLICT (name) DO NOTHING;&#10;&#10;-- Default admin user: admin@example.com / admin123 (BCrypt hash pre-generated)&#10;INSERT INTO users(email, password_hash, enabled) VALUES&#10;('admin@example.com', '$2a$10$gR0wqFQH2mQq5qPqQ0Yp7uD1m3TuwHSQK9V1rCw3xVq1L1m6bXoQG', true)&#10;ON CONFLICT (email) DO NOTHING;&#10;&#10;-- Grant ADMIN role if not already present&#10;INSERT INTO user_account_roles(user_account_id, roles)&#10;SELECT u.id, 'ADMIN'&#10;FROM users u&#10;WHERE u.email = 'admin@example.com'&#10;  AND NOT EXISTS (&#10;    SELECT 1 FROM user_account_roles r WHERE r.user_account_id = u.id AND r.roles = 'ADMIN'&#10;  );&#10;" />
+            </PendingDiffInfo>
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+</project>

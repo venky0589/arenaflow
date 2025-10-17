@@ -1,0 +1,293 @@
+# Badminton Tournament Manager - MVP TODO List
+
+## Project Context for Claude Code
+You have a badminton tournament management system with:
+- ✅ Backend: Spring Boot + PostgreSQL with basic CRUD for Tournament, Player, Court, Match, Registration
+- ✅ Admin UI: React CRUD interfaces (raw ID fields in forms)
+- ✅ User UI: Tournament browse, register, view matches
+- ✅ Mobile: Login, basic scoring (increments scores only)
+- ✅ JWT auth with seeded admin user
+
+---
+
+## 🚨 CRITICAL MVP BLOCKERS (Do These First)
+
+### 1. Draw Generation & Bracket System (PRIORITY 1)
+**Backend Tasks:**
+- [ ] Create `DrawGenerationService` with algorithm for single elimination brackets
+- [ ] Add `round` field to Match entity (1 = first round, 2 = quarterfinals, etc.)
+- [ ] Add `nextMatchId` field to Match entity (for winner progression)
+- [ ] Implement `POST /tournaments/{id}/categories/{categoryId}/generate-draw` endpoint
+- [ ] Algorithm: Pair players based on seeding, create matches for all rounds, link matches via `nextMatchId`
+- [ ] Handle bye logic for non-power-of-2 participant counts
+- [ ] Add validation: Can only generate draw if tournament status is READY
+
+**Admin UI Tasks:**
+- [ ] Add "Generate Draw" button on tournament detail page
+- [ ] Show confirmation dialog before generating
+- [ ] Display success/error messages
+- [ ] Refresh matches list after generation
+
+**User UI Tasks:**
+- [ ] Create `BracketView` component to display tournament bracket tree
+- [ ] Use recursive component or tree library to render bracket structure
+- [ ] Show match results (winner highlighted) and upcoming matches
+- [ ] Make it responsive for mobile view
+
+**Acceptance Criteria:**
+- Admin can click button to auto-generate all matches from registrations
+- Bracket displays correctly with rounds and match progression
+- Winner of Match 1 advances to correct next round match
+
+---
+
+### 2. Replace Raw ID Fields with Dropdowns (PRIORITY 2)
+**Admin UI Tasks:**
+- [ ] Match Form: Replace `player1Id` and `player2Id` text fields with searchable player dropdowns
+- [ ] Match Form: Replace `tournamentId` with tournament dropdown
+- [ ] Match Form: Replace `courtId` with court dropdown
+- [ ] Registration Form: Replace `playerId` with player dropdown
+- [ ] Registration Form: Replace `tournamentId` with tournament dropdown
+- [ ] Registration Form: Replace `categoryId` with category dropdown (load categories based on selected tournament)
+- [ ] Tournament Form: Replace `courtIds` with multi-select court picker
+- [ ] Use MUI `Autocomplete` component for all dropdowns
+- [ ] Fetch options from API on component mount
+- [ ] Show loading state while fetching options
+
+**Acceptance Criteria:**
+- No raw ID input fields remain in any form
+- All dropdowns show human-readable names (not IDs)
+- Dropdowns are searchable/filterable
+- Forms submit correct IDs to backend
+
+---
+
+### 3. Match Scheduling & Court Assignment (PRIORITY 3)
+**Backend Tasks:**
+- [ ] Add `scheduledTime` (TIMESTAMP) field to Match entity
+- [ ] Add `estimatedDuration` (INTEGER minutes) field to Match entity
+- [ ] Create `MatchSchedulingService` with conflict detection
+- [ ] Implement scheduling algorithm: assign courts avoiding player/court conflicts
+- [ ] Add `PUT /matches/{id}/schedule` endpoint (admin only)
+- [ ] Validation: Detect if player has overlapping matches
+- [ ] Validation: Detect if court is already booked at that time
+
+**Admin UI Tasks:**
+- [ ] Add Schedule Editor view with calendar/timeline interface
+- [ ] Show all matches with drag-drop to assign court and time
+- [ ] Display conflict warnings (red highlight) when scheduling conflicts occur
+- [ ] Add bulk schedule action: "Auto-schedule all matches"
+- [ ] Show court availability timeline
+
+**User UI Tasks:**
+- [ ] Update match list to show scheduled time prominently
+- [ ] Add filter: "View by Court" and "View by Time"
+- [ ] Add "My Schedule" view showing only logged-in player's matches
+
+**Acceptance Criteria:**
+- Admin can assign date, time, and court to matches
+- System prevents double-booking of courts and players
+- Users see their personalized match schedule
+
+---
+
+### 4. Check-In API Persistence (PRIORITY 4)
+**Backend Tasks:**
+- [ ] Add `checkedIn` (BOOLEAN default FALSE) field to Registration entity
+- [ ] Add `checkedInAt` (TIMESTAMP) field to Registration entity
+- [ ] Create `POST /registrations/{id}/check-in` endpoint
+- [ ] Create `POST /registrations/{id}/undo-check-in` endpoint
+- [ ] Add validation: Check-in only allowed within 2 hours before match time
+- [ ] Add query: Get all registrations for a match with check-in status
+
+**Admin UI Tasks:**
+- [ ] Add "Check-In Status" column to Registrations DataGrid
+- [ ] Show ✅ for checked-in, ❌ for not checked-in
+- [ ] Add manual check-in toggle button in Admin UI
+
+**Mobile Tasks:**
+- [ ] Replace local-only check-in toggle with API call
+- [ ] Show check-in confirmation toast
+- [ ] Handle offline: Queue check-in request if no network
+- [ ] Sync queued check-ins when connection restored
+- [ ] Show visual indicator (green checkmark) for checked-in players
+
+**Acceptance Criteria:**
+- Mobile check-in persists to backend
+- Admin can see real-time check-in status
+- Check-in enforces time window rules
+
+---
+
+### 5. Role-Based Access Control (PRIORITY 5)
+**Backend Tasks:**
+- [ ] Update UserAccount entity: Add `role` field (ENUM: ADMIN, REFEREE, USER)
+- [ ] Update JWT token generation: Include role in claims
+- [ ] Add `@PreAuthorize` annotations to controller methods:
+  - [ ] Admin endpoints: `@PreAuthorize("hasRole('ADMIN')")`
+  - [ ] Scoring endpoints: `@PreAuthorize("hasAnyRole('ADMIN', 'REFEREE')")`
+  - [ ] Registration endpoints: `@PreAuthorize("hasAnyRole('USER', 'ADMIN')")`
+- [ ] Update seed data: Create referee user (referee@example.com / referee123)
+- [ ] Update login response: Return user role along with token
+
+**Admin UI Tasks:**
+- [ ] Add auth guard: Redirect to login if not ADMIN role
+- [ ] Parse JWT to extract role on app load
+- [ ] Show "Access Denied" page if non-admin tries to access
+
+**User UI Tasks:**
+- [ ] Allow USER and ADMIN roles
+- [ ] Hide/disable admin-only features for regular users
+
+**Mobile Tasks:**
+- [ ] On login, store user role in AsyncStorage
+- [ ] If role is REFEREE: Show only Scoring and Check-In screens
+- [ ] If role is USER: Show tournament browse and registration only
+- [ ] Add role indicator in profile/settings screen
+
+**Acceptance Criteria:**
+- Backend rejects unauthorized requests (returns 403)
+- Admin UI only accessible to ADMIN users
+- Mobile shows role-appropriate screens
+- Referee users cannot access admin features
+
+---
+
+## 🎯 NICE-TO-HAVE (Post-MVP, Do After Above 5)
+
+### 6. Enhanced Match Status Workflow
+- [ ] Add status transitions: SCHEDULED → READY → IN_PROGRESS → COMPLETED
+- [ ] Add WALKOVER and RETIRED statuses
+- [ ] Auto-transition match to READY when both players check in
+- [ ] Prevent scoring if match not in IN_PROGRESS status
+
+### 7. Game-by-Game Scoring
+- [ ] Expand Match entity: Add `game1Player1Score`, `game1Player2Score`, `game2Player1Score`, etc.
+- [ ] Mobile: Show game selector (Game 1, Game 2, Game 3)
+- [ ] Enforce badminton rules: 21 points to win, deuce at 20-20, max 30 points
+- [ ] Auto-determine match winner when 2 games won
+
+### 8. Tournament Format Support
+- [ ] Add `format` field to Category entity (SINGLE_ELIMINATION, ROUND_ROBIN)
+- [ ] Implement round-robin draw generation algorithm
+- [ ] Update bracket view to support both formats
+
+### 9. Team/Doubles Support
+- [ ] Create Team entity (player1_id, player2_id)
+- [ ] Update Registration: Allow team_id instead of player_id
+- [ ] Update Match: Support team matches
+- [ ] Mobile: Show team names in scoring interface
+
+### 10. Seeding System
+- [ ] Add `seedRank` field to Registration entity
+- [ ] Admin UI: Manual seeding interface (drag-drop to reorder)
+- [ ] Update draw generation: Place seeded players in bracket correctly (1 vs 8, 2 vs 7, etc.)
+
+### 11. Live Score Updates (WebSocket)
+- [ ] Backend: Add WebSocket support with Spring WebSocket
+- [ ] Create `/topic/match/{matchId}` subscription endpoint
+- [ ] Broadcast score updates when match is updated
+- [ ] User UI: Subscribe to match updates, refresh score live without polling
+- [ ] Show "LIVE" badge on in-progress matches
+
+### 12. Notifications
+- [ ] Email: Send confirmation on registration using Mailpit/SMTP
+- [ ] Email: Send match reminder 1 hour before scheduled time
+- [ ] Mobile: Expo Push Notifications for match reminders
+
+### 13. Statistics Dashboard
+- [ ] Admin UI: Tournament statistics (total registrations, matches completed, etc.)
+- [ ] User UI: Player profile with win/loss record
+- [ ] Chart library integration (Recharts) for visual analytics
+
+### 14. Payment Integration
+- [ ] Add `registrationFee` to Category entity
+- [ ] Integrate Razorpay or Stripe
+- [ ] Add payment status to Registration entity
+- [ ] Admin UI: View payment transactions
+
+### 15. Deployment
+- [ ] Create Dockerfiles for backend and frontends
+- [ ] Setup GitHub Actions CI/CD
+- [ ] Deploy to Render.com or Fly.io
+- [ ] Configure production environment variables
+
+---
+
+## 📋 Work Order for Claude Code
+
+### Week 1 Focus (MVP Core)
+**Day 1-2:** Draw Generation (#1)
+- Start with backend service, then admin button, then user bracket view
+
+**Day 3:** Dropdown Forms (#2)
+- Replace all raw ID fields in admin forms
+
+**Day 4-5:** Match Scheduling (#3)
+- Backend scheduling logic + admin schedule editor
+
+### Week 2 Focus (MVP Complete)
+**Day 6:** Check-In API (#4)
+- Backend persistence + mobile API integration
+
+**Day 7-8:** Role-Based Auth (#5)
+- Backend RBAC + frontend role guards
+
+**Day 9-10:** Testing & Bug Fixes
+- Manual testing of all MVP features
+- Fix any issues found
+
+---
+
+## 🔧 How to Use with Claude Code
+
+1. **Start each task with context:**
+   ```bash
+   # Example for Draw Generation
+   claude "I need to implement draw generation for single elimination tournaments. 
+   I have Tournament, Match, and Registration entities. 
+   Create a DrawGenerationService that generates matches from registrations, 
+   assigns rounds, and links matches for winner progression."
+   ```
+
+2. **Work incrementally:**
+   - Do backend first, test with Postman
+   - Then frontend UI
+   - Test end-to-end
+
+3. **Reference this document:**
+   ```bash
+   claude "Looking at task #2 in my TODO list, implement dropdown replacements 
+   for the Match form in admin-ui. Replace player1Id and player2Id text inputs 
+   with MUI Autocomplete components that fetch from /players endpoint."
+   ```
+
+4. **Ask for specific file modifications:**
+   ```bash
+   claude "Modify Match.java entity to add scheduledTime and estimatedDuration fields. 
+   Also create a Flyway migration V3__add_match_scheduling.sql for this change."
+   ```
+
+---
+
+## ✅ Success Criteria Checklist
+
+MVP is complete when:
+- [ ] Admin can auto-generate tournament brackets with one click
+- [ ] Brackets display visually in user UI with winner progression
+- [ ] All admin forms use dropdowns instead of raw IDs
+- [ ] Admin can schedule matches with court and time assignment
+- [ ] System prevents scheduling conflicts
+- [ ] Players can check in via mobile, persisted to backend
+- [ ] Role-based access: Admin/Referee/User roles enforced
+- [ ] System can run a real tournament end-to-end
+
+---
+
+## 📝 Notes
+
+- **Estimated time:** 15-18 working days for items 1-5
+- **Testing:** Test each feature immediately after implementation
+- **Database:** Run Flyway migrations after schema changes
+- **Git:** Commit after each completed task
+- **Priorities:** Stick to tasks 1-5 for MVP; resist adding features from nice-to-have list until MVP is solid

@@ -961,4 +961,821 @@ Use browser DevTools Network tab to:
 
 ---
 
+## Implementation Improvements Roadmap
+
+Based on the comprehensive implementation improvement documents (v1-v4) in `../docs/`, the following enhancements are recommended for the Admin UI:
+
+### 1. **State Management Enhancement** (HIGH PRIORITY)
+**Current**: Local component state with useState, prop drilling
+**Issue**: No centralized state management, repeated API calls, state synchronization issues
+
+**Recommended Solutions**:
+
+#### Option A: Context API (Simpler, built-in)
+```typescript
+// contexts/TournamentContext.tsx
+interface TournamentContextType {
+  tournaments: Tournament[];
+  selectedTournament: Tournament | null;
+  loading: boolean;
+  error: string | null;
+  fetchTournaments: () => Promise<void>;
+  selectTournament: (id: number) => void;
+  createTournament: (data: CreateTournamentRequest) => Promise<void>;
+  updateTournament: (id: number, data: UpdateTournamentRequest) => Promise<void>;
+  deleteTournament: (id: number) => Promise<void>;
+}
+
+export const TournamentProvider: React.FC<{children: ReactNode}> = ({children}) => {
+  // State management logic
+  return (
+    <TournamentContext.Provider value={/* ... */}>
+      {children}
+    </TournamentContext.Provider>
+  );
+};
+```
+
+#### Option B: Zustand (Recommended - simpler, better performance)
+```typescript
+// stores/useTournamentStore.ts
+import create from 'zustand';
+
+interface TournamentStore {
+  tournaments: Tournament[];
+  loading: boolean;
+  error: string | null;
+  fetchTournaments: () => Promise<void>;
+  createTournament: (data: CreateTournamentRequest) => Promise<void>;
+}
+
+export const useTournamentStore = create<TournamentStore>((set) => ({
+  tournaments: [],
+  loading: false,
+  error: null,
+  fetchTournaments: async () => {
+    set({ loading: true });
+    try {
+      const data = await api.get<Tournament[]>('/tournaments');
+      set({ tournaments: data, loading: false, error: null });
+    } catch (err) {
+      set({ error: 'Failed to fetch tournaments', loading: false });
+    }
+  },
+  createTournament: async (data) => {
+    await api.post('/tournaments', data);
+    // Optimistically update or refetch
+  }
+}));
+```
+
+**Benefits**:
+- Eliminates prop drilling
+- Centralized state updates
+- Easier testing
+- Better performance (fewer re-renders)
+- Type-safe
+
+**Files to Create**:
+- `src/stores/useTournamentStore.ts`
+- `src/stores/usePlayerStore.ts`
+- `src/stores/useMatchStore.ts`
+- `src/stores/useCourtStore.ts`
+- `src/stores/useRegistrationStore.ts`
+
+### 2. **API Client Architecture Refactor** (HIGH PRIORITY)
+**Current**: Axios instance in `api/client.ts` with basic interceptor
+**Issue**: No type safety, inconsistent error handling, scattered API calls
+
+**Recommended Structure**:
+
+```typescript
+// api/client.ts - Enhanced base client
+class ApiClient {
+  private client: AxiosInstance;
+
+  constructor() {
+    this.client = axios.create({
+      baseURL: import.meta.env.VITE_API_BASE,
+      timeout: 10000,
+    });
+    this.setupInterceptors();
+  }
+
+  private setupInterceptors() {
+    // Request interceptor
+    this.client.interceptors.request.use(
+      (config) => {
+        const token = localStorage.getItem('token');
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`;
+        }
+        return config;
+      },
+      (error) => Promise.reject(error)
+    );
+
+    // Response interceptor - handle errors globally
+    this.client.interceptors.response.use(
+      (response) => response,
+      async (error) => {
+        if (error.response?.status === 401) {
+          localStorage.removeItem('token');
+          window.location.href = '/login';
+        }
+        return Promise.reject(this.transformError(error));
+      }
+    );
+  }
+
+  private transformError(error: any): ApiError {
+    // Transform backend error to typed frontend error
+  }
+
+  async get<T>(url: string, params?: any): Promise<T> {
+    const response = await this.client.get<T>(url, { params });
+    return response.data;
+  }
+
+  async post<T>(url: string, data?: any): Promise<T> {
+    const response = await this.client.post<T>(url, data);
+    return response.data;
+  }
+
+  async put<T>(url: string, data?: any): Promise<T> {
+    const response = await this.client.put<T>(url, data);
+    return response.data;
+  }
+
+  async delete<T>(url: string): Promise<T> {
+    const response = await this.client.delete<T>(url);
+    return response.data;
+  }
+}
+
+export const apiClient = new ApiClient();
+
+// api/tournaments.ts - Domain-specific API
+export const tournamentsApi = {
+  getAll: () => apiClient.get<Tournament[]>('/api/v1/tournaments'),
+  getById: (id: number) => apiClient.get<Tournament>(`/api/v1/tournaments/${id}`),
+  create: (data: CreateTournamentRequest) =>
+    apiClient.post<Tournament>('/api/v1/tournaments', data),
+  update: (id: number, data: UpdateTournamentRequest) =>
+    apiClient.put<Tournament>(`/api/v1/tournaments/${id}`, data),
+  delete: (id: number) =>
+    apiClient.delete<void>(`/api/v1/tournaments/${id}`),
+  generateDraw: (id: number) =>
+    apiClient.post<void>(`/api/v1/tournaments/${id}/generate-draw`)
+};
+
+// api/players.ts
+export const playersApi = {
+  getAll: () => apiClient.get<Player[]>('/api/v1/players'),
+  // ... similar structure
+};
+```
+
+**Benefits**:
+- Type-safe API calls
+- Centralized error handling
+- Consistent error transformation
+- Easier mocking for tests
+- Single source of truth for endpoints
+
+**Files to Create/Modify**:
+- `src/api/client.ts` (enhance existing)
+- `src/api/tournaments.ts` (new)
+- `src/api/players.ts` (new)
+- `src/api/courts.ts` (new)
+- `src/api/matches.ts` (new)
+- `src/api/registrations.ts` (new)
+- `src/types/api.ts` (new - for error types)
+
+### 3. **Custom Hooks for Reusability** (MEDIUM PRIORITY)
+**Current**: Direct API calls in components
+**Issue**: Code duplication, inconsistent loading/error states
+
+**Recommended Hooks**:
+
+```typescript
+// hooks/useTournaments.ts
+export function useTournaments() {
+  const [tournaments, setTournaments] = useState<Tournament[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchTournaments = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await tournamentsApi.getAll();
+      setTournaments(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unknown error');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchTournaments();
+  }, [fetchTournaments]);
+
+  const createTournament = async (data: CreateTournamentRequest) => {
+    await tournamentsApi.create(data);
+    await fetchTournaments(); // Refresh
+  };
+
+  const updateTournament = async (id: number, data: UpdateTournamentRequest) => {
+    await tournamentsApi.update(id, data);
+    await fetchTournaments();
+  };
+
+  const deleteTournament = async (id: number) => {
+    await tournamentsApi.delete(id);
+    await fetchTournaments();
+  };
+
+  return {
+    tournaments,
+    loading,
+    error,
+    refetch: fetchTournaments,
+    createTournament,
+    updateTournament,
+    deleteTournament
+  };
+}
+
+// hooks/usePlayers.ts
+export function usePlayers() {
+  // Similar pattern
+}
+
+// hooks/useFormDialog.ts
+export function useFormDialog<T>(initialData: T) {
+  const [open, setOpen] = useState(false);
+  const [form, setForm] = useState<T>(initialData);
+  const [editingId, setEditingId] = useState<number | null>(null);
+
+  const openNew = () => {
+    setEditingId(null);
+    setForm(initialData);
+    setOpen(true);
+  };
+
+  const openEdit = (id: number, data: T) => {
+    setEditingId(id);
+    setForm(data);
+    setOpen(true);
+  };
+
+  const close = () => {
+    setOpen(false);
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  return {
+    open, form, editingId,
+    openNew, openEdit, close, handleChange, setForm
+  };
+}
+```
+
+**Files to Create**:
+- `src/hooks/useTournaments.ts`
+- `src/hooks/usePlayers.ts`
+- `src/hooks/useCourts.ts`
+- `src/hooks/useMatches.ts`
+- `src/hooks/useRegistrations.ts`
+- `src/hooks/useFormDialog.ts`
+- `src/hooks/useConfirmDialog.ts`
+
+### 4. **Form Handling with React Hook Form + Zod** (MEDIUM PRIORITY)
+**Current**: Formik + Yup (only in Login)
+**Issue**: Inconsistent validation across forms, verbose form code
+
+**Recommended Approach**:
+
+```typescript
+// types/schemas.ts
+import { z } from 'zod';
+
+export const tournamentSchema = z.object({
+  name: z.string().min(3, 'Name must be at least 3 characters'),
+  location: z.string().min(2, 'Location is required'),
+  startDate: z.string().refine((date) => {
+    return new Date(date) > new Date();
+  }, 'Start date must be in the future'),
+  endDate: z.string(),
+}).refine(data => {
+  return new Date(data.endDate) >= new Date(data.startDate);
+}, {
+  message: 'End date must be after start date',
+  path: ['endDate']
+});
+
+export const playerSchema = z.object({
+  firstName: z.string().min(2, 'First name is required'),
+  lastName: z.string().min(2, 'Last name is required'),
+  gender: z.enum(['M', 'F'], { errorMap: () => ({ message: 'Gender is required' }) }),
+  phone: z.string().regex(/^\+?[1-9]\d{1,14}$/, 'Invalid phone number').optional(),
+});
+
+export type TournamentFormData = z.infer<typeof tournamentSchema>;
+export type PlayerFormData = z.infer<typeof playerSchema>;
+
+// components/TournamentForm.tsx
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+
+function TournamentForm({ onSave }: { onSave: (data: TournamentFormData) => void }) {
+  const { register, handleSubmit, formState: { errors } } = useForm<TournamentFormData>({
+    resolver: zodResolver(tournamentSchema)
+  });
+
+  return (
+    <form onSubmit={handleSubmit(onSave)}>
+      <TextField
+        {...register('name')}
+        label="Tournament Name"
+        error={!!errors.name}
+        helperText={errors.name?.message}
+      />
+      <TextField
+        {...register('location')}
+        label="Location"
+        error={!!errors.location}
+        helperText={errors.location?.message}
+      />
+      <TextField
+        {...register('startDate')}
+        type="date"
+        label="Start Date"
+        error={!!errors.startDate}
+        helperText={errors.startDate?.message}
+      />
+      <TextField
+        {...register('endDate')}
+        type="date"
+        label="End Date"
+        error={!!errors.endDate}
+        helperText={errors.endDate?.message}
+      />
+      <Button type="submit">Save</Button>
+    </form>
+  );
+}
+```
+
+**Benefits**:
+- Better TypeScript integration
+- Automatic type inference
+- Comprehensive validation
+- Less boilerplate
+- Better error messages
+
+**Dependencies to Add**:
+```bash
+npm install react-hook-form @hookform/resolvers zod
+```
+
+**Files to Create/Modify**:
+- `src/types/schemas.ts` (new)
+- `src/pages/Tournaments.tsx` (refactor to use react-hook-form)
+- `src/pages/Players.tsx` (refactor)
+- `src/pages/Courts.tsx` (refactor)
+- `src/pages/Matches.tsx` (refactor)
+- `src/pages/Registrations.tsx` (refactor)
+
+### 5. **Enhanced Error Handling** (HIGH PRIORITY)
+**Current**: Inconsistent error handling, no user feedback
+**Issue**: Errors logged to console but not shown to users
+
+**Recommended Approach**:
+
+```typescript
+// types/errors.ts
+export class ApiError extends Error {
+  constructor(
+    public code: string,
+    message: string,
+    public statusCode: number,
+    public details?: Record<string, any>
+  ) {
+    super(message);
+    this.name = 'ApiError';
+  }
+}
+
+export function handleApiError(error: any): ApiError {
+  if (error.response?.data) {
+    const { code, message, details } = error.response.data;
+    return new ApiError(
+      code || 'UNKNOWN_ERROR',
+      message || 'An error occurred',
+      error.response.status,
+      details
+    );
+  }
+
+  if (error.request) {
+    return new ApiError('NETWORK_ERROR', 'Network error occurred', 0);
+  }
+
+  return new ApiError('UNKNOWN_ERROR', error.message || 'Unknown error', 0);
+}
+
+// contexts/ErrorContext.tsx
+interface ErrorContextType {
+  showError: (message: string) => void;
+  showSuccess: (message: string) => void;
+  clearError: () => void;
+}
+
+export const ErrorProvider: React.FC<{children: ReactNode}> = ({children}) => {
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'error' });
+
+  const showError = (message: string) => {
+    setSnackbar({ open: true, message, severity: 'error' });
+  };
+
+  const showSuccess = (message: string) => {
+    setSnackbar({ open: true, message, severity: 'success' });
+  };
+
+  const clearError = () => {
+    setSnackbar({ ...snackbar, open: false });
+  };
+
+  return (
+    <ErrorContext.Provider value={{ showError, showSuccess, clearError }}>
+      {children}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={clearError}
+      >
+        <Alert severity={snackbar.severity}>{snackbar.message}</Alert>
+      </Snackbar>
+    </ErrorContext.Provider>
+  );
+};
+
+// Usage in components
+function TournamentPage() {
+  const { showError, showSuccess } = useError();
+
+  const handleSave = async (data: TournamentFormData) => {
+    try {
+      await tournamentsApi.create(data);
+      showSuccess('Tournament created successfully');
+    } catch (err) {
+      const apiError = handleApiError(err);
+      showError(apiError.message);
+    }
+  };
+}
+```
+
+**Files to Create**:
+- `src/types/errors.ts`
+- `src/contexts/ErrorContext.tsx`
+- `src/hooks/useError.ts`
+
+### 6. **Component Organization Refactor** (MEDIUM PRIORITY)
+**Current**: Flat structure
+**Recommended**: Domain-driven organization
+
+```
+src/
+├── components/
+│   ├── common/              # Reusable UI components
+│   │   ├── Button/
+│   │   ├── DataTable/
+│   │   ├── FormField/
+│   │   ├── ConfirmDialog/
+│   │   └── LoadingSpinner/
+│   ├── tournaments/         # Domain-specific
+│   │   ├── TournamentList/
+│   │   ├── TournamentForm/
+│   │   └── TournamentDetail/
+│   ├── players/
+│   │   ├── PlayerList/
+│   │   ├── PlayerForm/
+│   │   └── PlayerCard/
+│   ├── matches/
+│   │   ├── MatchList/
+│   │   ├── MatchForm/
+│   │   └── MatchCard/
+│   └── layout/              # Layout components
+│       ├── Layout.tsx
+│       ├── Navbar/
+│       └── Sidebar/
+├── pages/                   # Page components
+├── hooks/                   # Custom hooks
+├── api/                     # API clients
+├── stores/                  # State management
+├── types/                   # TypeScript types
+│   ├── models.ts
+│   ├── schemas.ts
+│   └── errors.ts
+├── utils/                   # Utility functions
+└── contexts/                # React contexts
+```
+
+### 7. **Loading States & Skeletons** (LOW PRIORITY)
+**Current**: No loading indicators
+**Recommended**: Add loading states with skeleton screens
+
+```typescript
+// components/common/LoadingSpinner.tsx
+export function LoadingSpinner() {
+  return <CircularProgress />;
+}
+
+// components/common/TableSkeleton.tsx
+export function TableSkeleton({ rows = 5 }: { rows?: number }) {
+  return (
+    <Stack spacing={1}>
+      {Array.from({ length: rows }).map((_, i) => (
+        <Skeleton key={i} variant="rectangular" height={52} />
+      ))}
+    </Stack>
+  );
+}
+
+// Usage in pages
+function TournamentsPage() {
+  const { tournaments, loading } = useTournaments();
+
+  if (loading) {
+    return <TableSkeleton />;
+  }
+
+  return <CrudTable rows={tournaments} columns={columns} />;
+}
+```
+
+### 8. **Confirmation Dialogs** (MEDIUM PRIORITY)
+**Current**: No delete confirmation
+**Recommended**: Confirmation dialog for destructive actions
+
+```typescript
+// hooks/useConfirmDialog.ts
+export function useConfirmDialog() {
+  const [open, setOpen] = useState(false);
+  const [config, setConfig] = useState({
+    title: '',
+    message: '',
+    onConfirm: () => {}
+  });
+
+  const confirm = (title: string, message: string, onConfirm: () => void) => {
+    setConfig({ title, message, onConfirm });
+    setOpen(true);
+  };
+
+  const handleConfirm = () => {
+    config.onConfirm();
+    setOpen(false);
+  };
+
+  return { open, config, confirm, handleConfirm, setOpen };
+}
+
+// components/common/ConfirmDialog.tsx
+export function ConfirmDialog({ open, title, message, onConfirm, onCancel }) {
+  return (
+    <Dialog open={open} onClose={onCancel}>
+      <DialogTitle>{title}</DialogTitle>
+      <DialogContent>{message}</DialogContent>
+      <DialogActions>
+        <Button onClick={onCancel}>Cancel</Button>
+        <Button onClick={onConfirm} color="error">Confirm</Button>
+      </DialogActions>
+    </Dialog>
+  );
+}
+
+// Usage
+function TournamentsPage() {
+  const { confirm, ...dialogProps } = useConfirmDialog();
+
+  const handleDelete = (tournament: Tournament) => {
+    confirm(
+      'Delete Tournament',
+      `Are you sure you want to delete "${tournament.name}"? This action cannot be undone.`,
+      async () => {
+        await tournamentsApi.delete(tournament.id);
+        refetch();
+      }
+    );
+  };
+
+  return (
+    <>
+      {/* ... */}
+      <ConfirmDialog {...dialogProps} />
+    </>
+  );
+}
+```
+
+### 9. **Performance Optimizations** (LOW PRIORITY)
+**Recommended Improvements**:
+
+```typescript
+// React.memo for expensive components
+export const CrudTable = React.memo(({ rows, columns, onRowClick }) => {
+  // Component logic
+}, (prevProps, nextProps) => {
+  return prevProps.rows === nextProps.rows;
+});
+
+// useCallback for event handlers
+const handleRowClick = useCallback((row: Tournament) => {
+  // Logic
+}, [/* dependencies */]);
+
+// useMemo for expensive computations
+const sortedTournaments = useMemo(() => {
+  return tournaments.sort((a, b) =>
+    new Date(b.startDate).getTime() - new Date(a.startDate).getTime()
+  );
+}, [tournaments]);
+
+// Lazy loading for routes
+const TournamentsPage = lazy(() => import('./pages/Tournaments'));
+const PlayersPage = lazy(() => import('./pages/Players'));
+
+function App() {
+  return (
+    <Suspense fallback={<LoadingSpinner />}>
+      <Routes>
+        <Route path="/tournaments" element={<TournamentsPage />} />
+        <Route path="/players" element={<PlayersPage />} />
+      </Routes>
+    </Suspense>
+  );
+}
+```
+
+### 10. **TypeScript Type Improvements** (MEDIUM PRIORITY)
+**Current**: Basic types
+**Recommended**: Comprehensive type definitions
+
+```typescript
+// types/models.ts
+export interface Tournament {
+  id: number;
+  name: string;
+  location: string;
+  startDate: string;
+  endDate: string;
+  status?: 'DRAFT' | 'ACTIVE' | 'COMPLETED';
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface Player {
+  id: number;
+  firstName: string;
+  lastName: string;
+  gender: 'M' | 'F';
+  phone?: string;
+}
+
+export interface Match {
+  id: number;
+  tournamentId: number;
+  courtId: number;
+  player1Id: number;
+  player2Id: number;
+  score1?: number;
+  score2?: number;
+  status: 'SCHEDULED' | 'IN_PROGRESS' | 'COMPLETED';
+  scheduledAt: string;
+}
+
+// Request/Response DTOs
+export interface CreateTournamentRequest {
+  name: string;
+  location: string;
+  startDate: string;
+  endDate: string;
+}
+
+export interface UpdateTournamentRequest extends Partial<CreateTournamentRequest> {}
+
+// API Response wrapper
+export interface ApiResponse<T> {
+  data: T;
+  message?: string;
+}
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+```
+
+---
+
+## Implementation Priority
+
+### Phase 1 (Week 1) - Critical Foundations
+1. **Enhanced API Client Architecture** - Refactor api/client.ts and create domain-specific API files
+2. **Error Handling System** - Implement ErrorContext and user-facing error messages
+3. **State Management** - Choose and implement either Context API or Zustand
+
+### Phase 2 (Week 2) - UX Improvements
+4. **Custom Hooks** - Extract reusable logic from components
+5. **Form Handling** - Migrate to React Hook Form + Zod
+6. **Confirmation Dialogs** - Add delete confirmations
+7. **Loading States** - Add skeleton screens
+
+### Phase 3 (Week 3) - Polish & Performance
+8. **Component Organization** - Restructure file/folder organization
+9. **TypeScript Improvements** - Add comprehensive type definitions
+10. **Performance Optimizations** - Add React.memo, useCallback, useMemo where needed
+
+---
+
+## Dependencies to Add
+
+```bash
+# State management (choose one)
+npm install zustand
+
+# Form handling
+npm install react-hook-form @hookform/resolvers zod
+
+# Performance
+npm install react-window  # For large lists (optional)
+
+# Date handling (if adding date pickers)
+npm install @mui/x-date-pickers dayjs
+```
+
+---
+
+## Testing Recommendations
+
+### Component Tests (React Testing Library)
+```typescript
+// __tests__/TournamentList.test.tsx
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { TournamentList } from '../components/tournaments/TournamentList';
+
+describe('TournamentList', () => {
+  it('should display tournaments after loading', async () => {
+    jest.spyOn(tournamentsApi, 'getAll').mockResolvedValue([
+      { id: 1, name: 'Summer Tournament', startDate: '2025-06-01', endDate: '2025-06-03', location: 'Stadium' }
+    ]);
+
+    render(<TournamentList />);
+
+    expect(screen.getByText(/loading/i)).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Summer Tournament')).toBeInTheDocument();
+    });
+  });
+});
+```
+
+### E2E Tests (Playwright)
+```typescript
+// e2e/tournaments.spec.ts
+import { test, expect } from '@playwright/test';
+
+test('admin can create tournament', async ({ page }) => {
+  await page.goto('http://localhost:5173/login');
+  await page.fill('[name="email"]', 'admin@example.com');
+  await page.fill('[name="password"]', 'admin123');
+  await page.click('button[type="submit"]');
+
+  await page.click('text=Tournaments');
+  await page.click('text=New');
+
+  await page.fill('[name="name"]', 'Winter Championship');
+  await page.fill('[name="location"]', 'Arena');
+  await page.fill('[name="startDate"]', '2025-12-01');
+  await page.fill('[name="endDate"]', '2025-12-03');
+  await page.click('button:has-text("Save")');
+
+  await expect(page.locator('text=Winter Championship')).toBeVisible();
+});
+```
+
+---
+
 **For Questions**: See main project context at [../CLAUDE.md](../CLAUDE.md)

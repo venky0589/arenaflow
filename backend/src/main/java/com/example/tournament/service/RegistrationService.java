@@ -1,6 +1,9 @@
 package com.example.tournament.service;
 
 import com.example.tournament.domain.Registration;
+import com.example.tournament.dto.request.CreateRegistrationRequest;
+import com.example.tournament.dto.request.UpdateRegistrationRequest;
+import com.example.tournament.mapper.RegistrationMapper;
 import com.example.tournament.repo.RegistrationRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,9 +16,11 @@ import java.util.Optional;
 public class RegistrationService {
 
     private final RegistrationRepository repository;
+    private final RegistrationMapper mapper;
 
-    public RegistrationService(RegistrationRepository repository) {
+    public RegistrationService(RegistrationRepository repository, RegistrationMapper mapper) {
         this.repository = repository;
+        this.mapper = mapper;
     }
 
     /**
@@ -35,7 +40,9 @@ public class RegistrationService {
     /**
      * Create a new registration with business validations
      */
-    public Registration create(Registration registration) {
+    public Registration create(CreateRegistrationRequest request) {
+        Registration registration = mapper.toEntity(request);
+
         // Business validation: ensure tournament and player are set
         if (registration.getTournament() == null) {
             throw new RuntimeException("Registration must be associated with a tournament");
@@ -58,9 +65,11 @@ public class RegistrationService {
     /**
      * Update existing registration with proper field updates (no reflection hack!)
      */
-    public Registration update(Long id, Registration updates) {
+    public Registration update(Long id, UpdateRegistrationRequest request) {
         Registration existing = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Registration not found with id: " + id));
+
+        Registration updates = mapper.toEntity(request);
 
         // Business validation: prevent duplicate if tournament, player, or category is being updated
         Long tournamentId = updates.getTournament() != null ?

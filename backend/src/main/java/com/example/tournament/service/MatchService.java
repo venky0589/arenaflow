@@ -2,6 +2,10 @@ package com.example.tournament.service;
 
 import com.example.tournament.domain.Match;
 import com.example.tournament.domain.MatchStatus;
+import com.example.tournament.dto.request.CreateMatchRequest;
+import com.example.tournament.dto.request.UpdateMatchRequest;
+import com.example.tournament.dto.request.UpdateMatchScoreRequest;
+import com.example.tournament.mapper.MatchMapper;
 import com.example.tournament.repo.MatchRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,9 +18,11 @@ import java.util.Optional;
 public class MatchService {
 
     private final MatchRepository repository;
+    private final MatchMapper mapper;
 
-    public MatchService(MatchRepository repository) {
+    public MatchService(MatchRepository repository, MatchMapper mapper) {
         this.repository = repository;
+        this.mapper = mapper;
     }
 
     /**
@@ -36,7 +42,9 @@ public class MatchService {
     /**
      * Create a new match with business validations
      */
-    public Match create(Match match) {
+    public Match create(CreateMatchRequest request) {
+        Match match = mapper.toEntity(request);
+
         // Business validation: ensure tournament is set
         if (match.getTournament() == null) {
             throw new RuntimeException("Match must be associated with a tournament");
@@ -65,9 +73,11 @@ public class MatchService {
     /**
      * Update existing match with proper field updates (no reflection hack!)
      */
-    public Match update(Long id, Match updates) {
+    public Match update(Long id, UpdateMatchRequest request) {
         Match existing = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Match not found with id: " + id));
+
+        Match updates = mapper.toEntity(request);
 
         // Business validation: ensure players are different if both being updated
         if (updates.getPlayer1() != null && updates.getPlayer2() != null) {
@@ -115,17 +125,17 @@ public class MatchService {
     /**
      * Update match score - specific method for score updates
      */
-    public Match updateScore(Long id, Integer score1, Integer score2) {
+    public Match updateScore(Long id, UpdateMatchScoreRequest request) {
         Match existing = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Match not found with id: " + id));
 
-        validateScores(score1, score2);
+        validateScores(request.score1(), request.score2());
 
-        existing.setScore1(score1);
-        existing.setScore2(score2);
+        existing.setScore1(request.score1());
+        existing.setScore2(request.score2());
 
         // Auto-update status to COMPLETED if both scores are provided
-        if (score1 != null && score2 != null && existing.getStatus() == MatchStatus.SCHEDULED) {
+        if (request.score1() != null && request.score2() != null && existing.getStatus() == MatchStatus.SCHEDULED) {
             existing.setStatus(MatchStatus.COMPLETED);
         }
 

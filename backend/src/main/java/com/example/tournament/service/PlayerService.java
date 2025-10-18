@@ -1,6 +1,9 @@
 package com.example.tournament.service;
 
 import com.example.tournament.domain.Player;
+import com.example.tournament.dto.request.CreatePlayerRequest;
+import com.example.tournament.dto.request.UpdatePlayerRequest;
+import com.example.tournament.mapper.PlayerMapper;
 import com.example.tournament.repo.PlayerRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,9 +16,11 @@ import java.util.Optional;
 public class PlayerService {
 
     private final PlayerRepository repository;
+    private final PlayerMapper mapper;
 
-    public PlayerService(PlayerRepository repository) {
+    public PlayerService(PlayerRepository repository, PlayerMapper mapper) {
         this.repository = repository;
+        this.mapper = mapper;
     }
 
     /**
@@ -35,7 +40,9 @@ public class PlayerService {
     /**
      * Create a new player with business validations
      */
-    public Player create(Player player) {
+    public Player create(CreatePlayerRequest request) {
+        Player player = mapper.toEntity(request);
+
         // Business validation: check for duplicate player (same first name + last name)
         validateUniquePlayer(player.getFirstName(), player.getLastName(), null);
 
@@ -50,14 +57,14 @@ public class PlayerService {
     /**
      * Update existing player with proper field updates (no reflection hack!)
      */
-    public Player update(Long id, Player updates) {
+    public Player update(Long id, UpdatePlayerRequest request) {
         Player existing = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Player not found with id: " + id));
 
         // Business validation: check for duplicate player names (excluding current player)
-        if (updates.getFirstName() != null || updates.getLastName() != null) {
-            String firstName = updates.getFirstName() != null ? updates.getFirstName() : existing.getFirstName();
-            String lastName = updates.getLastName() != null ? updates.getLastName() : existing.getLastName();
+        if (request.firstName() != null || request.lastName() != null) {
+            String firstName = request.firstName() != null ? request.firstName() : existing.getFirstName();
+            String lastName = request.lastName() != null ? request.lastName() : existing.getLastName();
 
             if (!firstName.equals(existing.getFirstName()) || !lastName.equals(existing.getLastName())) {
                 validateUniquePlayer(firstName, lastName, id);
@@ -65,22 +72,22 @@ public class PlayerService {
         }
 
         // Business validation: validate gender if being updated
-        if (updates.getGender() != null) {
-            validateGender(updates.getGender());
+        if (request.gender() != null) {
+            validateGender(request.gender());
         }
 
         // Proper field updates (no reflection!)
-        if (updates.getFirstName() != null) {
-            existing.setFirstName(updates.getFirstName());
+        if (request.firstName() != null) {
+            existing.setFirstName(request.firstName());
         }
-        if (updates.getLastName() != null) {
-            existing.setLastName(updates.getLastName());
+        if (request.lastName() != null) {
+            existing.setLastName(request.lastName());
         }
-        if (updates.getGender() != null) {
-            existing.setGender(updates.getGender());
+        if (request.gender() != null) {
+            existing.setGender(request.gender());
         }
-        if (updates.getPhone() != null) {
-            existing.setPhone(updates.getPhone());
+        if (request.phone() != null) {
+            existing.setPhone(request.phone());
         }
 
         return repository.save(existing);

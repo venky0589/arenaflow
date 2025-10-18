@@ -1,6 +1,9 @@
 package com.example.tournament.service;
 
 import com.example.tournament.domain.Tournament;
+import com.example.tournament.dto.request.CreateTournamentRequest;
+import com.example.tournament.dto.request.UpdateTournamentRequest;
+import com.example.tournament.mapper.TournamentMapper;
 import com.example.tournament.repo.TournamentRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,9 +17,11 @@ import java.util.Optional;
 public class TournamentService {
 
     private final TournamentRepository repository;
+    private final TournamentMapper mapper;
 
-    public TournamentService(TournamentRepository repository) {
+    public TournamentService(TournamentRepository repository, TournamentMapper mapper) {
         this.repository = repository;
+        this.mapper = mapper;
     }
 
     /**
@@ -36,7 +41,9 @@ public class TournamentService {
     /**
      * Create a new tournament with business validations
      */
-    public Tournament create(Tournament tournament) {
+    public Tournament create(CreateTournamentRequest request) {
+        Tournament tournament = mapper.toEntity(request);
+
         // Business validation: end date must be after start date
         validateTournamentDates(tournament);
 
@@ -49,32 +56,32 @@ public class TournamentService {
     /**
      * Update existing tournament with proper field updates (no reflection hack!)
      */
-    public Tournament update(Long id, Tournament updates) {
+    public Tournament update(Long id, UpdateTournamentRequest request) {
         Tournament existing = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Tournament not found with id: " + id));
 
         // Business validation for dates
-        if (updates.getStartDate() != null && updates.getEndDate() != null) {
-            validateDates(updates.getStartDate(), updates.getEndDate());
+        if (request.startDate() != null && request.endDate() != null) {
+            validateDates(request.startDate(), request.endDate());
         }
 
         // Business validation: check for duplicate names (excluding current tournament)
-        if (updates.getName() != null && !updates.getName().equals(existing.getName())) {
-            validateUniqueName(updates.getName(), id);
+        if (request.name() != null && !request.name().equals(existing.getName())) {
+            validateUniqueName(request.name(), id);
         }
 
         // Proper field updates (no reflection!)
-        if (updates.getName() != null) {
-            existing.setName(updates.getName());
+        if (request.name() != null) {
+            existing.setName(request.name());
         }
-        if (updates.getLocation() != null) {
-            existing.setLocation(updates.getLocation());
+        if (request.location() != null) {
+            existing.setLocation(request.location());
         }
-        if (updates.getStartDate() != null) {
-            existing.setStartDate(updates.getStartDate());
+        if (request.startDate() != null) {
+            existing.setStartDate(request.startDate());
         }
-        if (updates.getEndDate() != null) {
-            existing.setEndDate(updates.getEndDate());
+        if (request.endDate() != null) {
+            existing.setEndDate(request.endDate());
         }
 
         return repository.save(existing);

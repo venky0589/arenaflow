@@ -1,6 +1,9 @@
 package com.example.tournament.service;
 
 import com.example.tournament.domain.Court;
+import com.example.tournament.dto.request.CreateCourtRequest;
+import com.example.tournament.dto.request.UpdateCourtRequest;
+import com.example.tournament.mapper.CourtMapper;
 import com.example.tournament.repo.CourtRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,9 +16,11 @@ import java.util.Optional;
 public class CourtService {
 
     private final CourtRepository repository;
+    private final CourtMapper mapper;
 
-    public CourtService(CourtRepository repository) {
+    public CourtService(CourtRepository repository, CourtMapper mapper) {
         this.repository = repository;
+        this.mapper = mapper;
     }
 
     /**
@@ -35,7 +40,9 @@ public class CourtService {
     /**
      * Create a new court with business validations
      */
-    public Court create(Court court) {
+    public Court create(CreateCourtRequest request) {
+        Court court = mapper.toEntity(request);
+
         // Business validation: check for duplicate court name (unique constraint)
         validateUniqueName(court.getName(), null);
 
@@ -45,21 +52,21 @@ public class CourtService {
     /**
      * Update existing court with proper field updates (no reflection hack!)
      */
-    public Court update(Long id, Court updates) {
+    public Court update(Long id, UpdateCourtRequest request) {
         Court existing = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Court not found with id: " + id));
 
         // Business validation: check for duplicate court name if name is being updated
-        if (updates.getName() != null && !updates.getName().equals(existing.getName())) {
-            validateUniqueName(updates.getName(), id);
+        if (request.name() != null && !request.name().equals(existing.getName())) {
+            validateUniqueName(request.name(), id);
         }
 
         // Proper field updates (no reflection!)
-        if (updates.getName() != null) {
-            existing.setName(updates.getName());
+        if (request.name() != null) {
+            existing.setName(request.name());
         }
-        if (updates.getLocationNote() != null) {
-            existing.setLocationNote(updates.getLocationNote());
+        if (request.locationNote() != null) {
+            existing.setLocationNote(request.locationNote());
         }
 
         return repository.save(existing);

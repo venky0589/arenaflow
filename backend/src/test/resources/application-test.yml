@@ -1,0 +1,29 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+  flyway:
+    enabled: false  # Use JPA schema generation for tests
+  sql:
+    init:
+      mode: never  # Disable data.sql execution in tests
+
+app:
+  jwt:
+    secret: test-secret-key-for-testing-purposes-only-change-me-please
+    validity-ms: 3600000  # 1 hour for tests
+
+logging:
+  level:
+    com.example.tournament: INFO
+    org.springframework: WARN
+    org.hibernate: WARN

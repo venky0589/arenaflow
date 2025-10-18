@@ -1,5 +1,6 @@
 package com.example.tournament.service;
 
+import com.example.tournament.domain.CategoryType;
 import com.example.tournament.domain.Registration;
 import com.example.tournament.dto.request.CreateRegistrationRequest;
 import com.example.tournament.dto.request.UpdateRegistrationRequest;
@@ -123,7 +124,7 @@ public class RegistrationService {
     // Private validation methods
 
     private void validateUniqueRegistration(Long tournamentId, Long playerId,
-                                           var categoryType, Long excludeId) {
+                                           CategoryType categoryType, Long excludeId) {
         List<Registration> existing = repository.findAll();
         boolean duplicateExists = existing.stream()
                 .anyMatch(r -> r.getTournament().getId().equals(tournamentId) &&

@@ -1,0 +1,9 @@
+[submodule "admin-ui"]
+	path = admin-ui
+	url = ../admin-ui-repo
+[submodule "backend"]
+	path = backend
+	url = ../backend-repo
+[submodule "user-ui"]
+	path = user-ui
+	url = ../user-ui-repo

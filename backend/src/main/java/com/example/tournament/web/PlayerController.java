@@ -1,7 +1,7 @@
 package com.example.tournament.web;
 
 import com.example.tournament.domain.Player;
-import com.example.tournament.repo.PlayerRepository;
+import com.example.tournament.service.PlayerService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,42 +13,51 @@ import java.util.List;
 @RequestMapping("/api/v1/players")
 public class PlayerController {
 
-    private final PlayerRepository repo;
+    private final PlayerService service;
 
-    public PlayerController(PlayerRepository repo) { this.repo = repo; }
+    public PlayerController(PlayerService service) {
+        this.service = service;
+    }
 
     @GetMapping
-    public List<Player> all() {{ return repo.findAll(); }}
+    public List<Player> all() {
+        return service.findAll();
+    }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Player> one(@PathVariable Long id) {{
-        return repo.findById(id).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
-    }}
+    public ResponseEntity<Player> one(@PathVariable Long id) {
+        return service.findById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
 
     @PostMapping
-    public ResponseEntity<Player> create(@Valid @RequestBody Player body) {{
-        Player saved = repo.save(body);
-        return ResponseEntity.created(URI.create("/players/" + saved.getId())).body(saved);
-    }}
+    public ResponseEntity<Player> create(@Valid @RequestBody Player body) {
+        try {
+            Player saved = service.create(body);
+            return ResponseEntity.created(URI.create("/api/v1/players/" + saved.getId())).body(saved);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Player> update(@PathVariable Long id, @Valid @RequestBody Player body) {{
-        return repo.findById(id).map(existing -> {{
-            body.getClass(); // no-op
-            // naive replace: set ID and save
-            try {{
-                var idField = Player.class.getDeclaredField("id");
-                idField.setAccessible(true);
-                idField.set(body, id);
-            }} catch (Exception ignored) {{}}
-            return ResponseEntity.ok(repo.save(body));
-        }}).orElse(ResponseEntity.notFound().build());
-    }}
+    public ResponseEntity<Player> update(@PathVariable Long id, @Valid @RequestBody Player body) {
+        try {
+            Player updated = service.update(id, body);
+            return ResponseEntity.ok(updated);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> delete(@PathVariable Long id) {{
-        if (!repo.existsById(id)) return ResponseEntity.notFound().build();
-        repo.deleteById(id);
-        return ResponseEntity.noContent().build();
-    }}
+    public ResponseEntity<?> delete(@PathVariable Long id) {
+        try {
+            service.deleteById(id);
+            return ResponseEntity.noContent().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
 }

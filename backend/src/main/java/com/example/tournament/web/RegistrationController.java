@@ -1,7 +1,7 @@
 package com.example.tournament.web;
 
 import com.example.tournament.domain.Registration;
-import com.example.tournament.repo.RegistrationRepository;
+import com.example.tournament.service.RegistrationService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,42 +13,51 @@ import java.util.List;
 @RequestMapping("/api/v1/registrations")
 public class RegistrationController {
 
-    private final RegistrationRepository repo;
+    private final RegistrationService service;
 
-    public RegistrationController(RegistrationRepository repo) { this.repo = repo; }
+    public RegistrationController(RegistrationService service) {
+        this.service = service;
+    }
 
     @GetMapping
-    public List<Registration> all() {{ return repo.findAll(); }}
+    public List<Registration> all() {
+        return service.findAll();
+    }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Registration> one(@PathVariable Long id) {{
-        return repo.findById(id).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
-    }}
+    public ResponseEntity<Registration> one(@PathVariable Long id) {
+        return service.findById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
 
     @PostMapping
-    public ResponseEntity<Registration> create(@Valid @RequestBody Registration body) {{
-        Registration saved = repo.save(body);
-        return ResponseEntity.created(URI.create("/registrations/" + saved.getId())).body(saved);
-    }}
+    public ResponseEntity<Registration> create(@Valid @RequestBody Registration body) {
+        try {
+            Registration saved = service.create(body);
+            return ResponseEntity.created(URI.create("/api/v1/registrations/" + saved.getId())).body(saved);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Registration> update(@PathVariable Long id, @Valid @RequestBody Registration body) {{
-        return repo.findById(id).map(existing -> {{
-            body.getClass(); // no-op
-            // naive replace: set ID and save
-            try {{
-                var idField = Registration.class.getDeclaredField("id");
-                idField.setAccessible(true);
-                idField.set(body, id);
-            }} catch (Exception ignored) {{}}
-            return ResponseEntity.ok(repo.save(body));
-        }}).orElse(ResponseEntity.notFound().build());
-    }}
+    public ResponseEntity<Registration> update(@PathVariable Long id, @Valid @RequestBody Registration body) {
+        try {
+            Registration updated = service.update(id, body);
+            return ResponseEntity.ok(updated);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> delete(@PathVariable Long id) {{
-        if (!repo.existsById(id)) return ResponseEntity.notFound().build();
-        repo.deleteById(id);
-        return ResponseEntity.noContent().build();
-    }}
+    public ResponseEntity<?> delete(@PathVariable Long id) {
+        try {
+            service.deleteById(id);
+            return ResponseEntity.noContent().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
 }

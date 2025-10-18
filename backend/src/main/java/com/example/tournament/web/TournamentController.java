@@ -1,7 +1,7 @@
 package com.example.tournament.web;
 
 import com.example.tournament.domain.Tournament;
-import com.example.tournament.repo.TournamentRepository;
+import com.example.tournament.service.TournamentService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,42 +13,51 @@ import java.util.List;
 @RequestMapping("/api/v1/tournaments")
 public class TournamentController {
 
-    private final TournamentRepository repo;
+    private final TournamentService service;
 
-    public TournamentController(TournamentRepository repo) { this.repo = repo; }
+    public TournamentController(TournamentService service) {
+        this.service = service;
+    }
 
     @GetMapping
-    public List<Tournament> all() {{ return repo.findAll(); }}
+    public List<Tournament> all() {
+        return service.findAll();
+    }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Tournament> one(@PathVariable Long id) {{
-        return repo.findById(id).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
-    }}
+    public ResponseEntity<Tournament> one(@PathVariable Long id) {
+        return service.findById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
 
     @PostMapping
-    public ResponseEntity<Tournament> create(@Valid @RequestBody Tournament body) {{
-        Tournament saved = repo.save(body);
-        return ResponseEntity.created(URI.create("/tournaments/" + saved.getId())).body(saved);
-    }}
+    public ResponseEntity<Tournament> create(@Valid @RequestBody Tournament body) {
+        try {
+            Tournament saved = service.create(body);
+            return ResponseEntity.created(URI.create("/api/v1/tournaments/" + saved.getId())).body(saved);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Tournament> update(@PathVariable Long id, @Valid @RequestBody Tournament body) {{
-        return repo.findById(id).map(existing -> {{
-            body.getClass(); // no-op
-            // naive replace: set ID and save
-            try {{
-                var idField = Tournament.class.getDeclaredField("id");
-                idField.setAccessible(true);
-                idField.set(body, id);
-            }} catch (Exception ignored) {{}}
-            return ResponseEntity.ok(repo.save(body));
-        }}).orElse(ResponseEntity.notFound().build());
-    }}
+    public ResponseEntity<Tournament> update(@PathVariable Long id, @Valid @RequestBody Tournament body) {
+        try {
+            Tournament updated = service.update(id, body);
+            return ResponseEntity.ok(updated);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> delete(@PathVariable Long id) {{
-        if (!repo.existsById(id)) return ResponseEntity.notFound().build();
-        repo.deleteById(id);
-        return ResponseEntity.noContent().build();
-    }}
+    public ResponseEntity<?> delete(@PathVariable Long id) {
+        try {
+            service.deleteById(id);
+            return ResponseEntity.noContent().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
 }

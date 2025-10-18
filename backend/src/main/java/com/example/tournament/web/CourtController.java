@@ -1,7 +1,7 @@
 package com.example.tournament.web;
 
 import com.example.tournament.domain.Court;
-import com.example.tournament.repo.CourtRepository;
+import com.example.tournament.service.CourtService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,42 +13,51 @@ import java.util.List;
 @RequestMapping("/api/v1/courts")
 public class CourtController {
 
-    private final CourtRepository repo;
+    private final CourtService service;
 
-    public CourtController(CourtRepository repo) { this.repo = repo; }
+    public CourtController(CourtService service) {
+        this.service = service;
+    }
 
     @GetMapping
-    public List<Court> all() {{ return repo.findAll(); }}
+    public List<Court> all() {
+        return service.findAll();
+    }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Court> one(@PathVariable Long id) {{
-        return repo.findById(id).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
-    }}
+    public ResponseEntity<Court> one(@PathVariable Long id) {
+        return service.findById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
 
     @PostMapping
-    public ResponseEntity<Court> create(@Valid @RequestBody Court body) {{
-        Court saved = repo.save(body);
-        return ResponseEntity.created(URI.create("/courts/" + saved.getId())).body(saved);
-    }}
+    public ResponseEntity<Court> create(@Valid @RequestBody Court body) {
+        try {
+            Court saved = service.create(body);
+            return ResponseEntity.created(URI.create("/api/v1/courts/" + saved.getId())).body(saved);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Court> update(@PathVariable Long id, @Valid @RequestBody Court body) {{
-        return repo.findById(id).map(existing -> {{
-            body.getClass(); // no-op
-            // naive replace: set ID and save
-            try {{
-                var idField = Court.class.getDeclaredField("id");
-                idField.setAccessible(true);
-                idField.set(body, id);
-            }} catch (Exception ignored) {{}}
-            return ResponseEntity.ok(repo.save(body));
-        }}).orElse(ResponseEntity.notFound().build());
-    }}
+    public ResponseEntity<Court> update(@PathVariable Long id, @Valid @RequestBody Court body) {
+        try {
+            Court updated = service.update(id, body);
+            return ResponseEntity.ok(updated);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> delete(@PathVariable Long id) {{
-        if (!repo.existsById(id)) return ResponseEntity.notFound().build();
-        repo.deleteById(id);
-        return ResponseEntity.noContent().build();
-    }}
+    public ResponseEntity<?> delete(@PathVariable Long id) {
+        try {
+            service.deleteById(id);
+            return ResponseEntity.noContent().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
 }

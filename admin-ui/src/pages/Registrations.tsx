@@ -123,10 +123,10 @@ export function Registrations() {
         <Button onClick={fetchRegistrations} disabled={loading}>Refresh</Button>
       </Stack>
       <Paper sx={{ p: 2 }}>
-        <CrudTable rows={registrations} columns={columns} onRowClick={onEdit} />
+        <CrudTable rows={registrations} columns={columns} onRowClick={onEdit} loading={loading} />
       </Paper>
 
-      <FormDialog open={open} title={editingId ? 'Edit Registration' : 'New Registration'} onClose={() => setOpen(false)} onSave={save}>
+      <FormDialog open={open} title={editingId ? 'Edit Registration' : 'New Registration'} onClose={() => setOpen(false)} onSave={save} saving={saving}>
         <Stack spacing={2} sx={{ mt: 1 }}>
           <Autocomplete
             options={tournaments}

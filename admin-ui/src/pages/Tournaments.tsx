@@ -105,10 +105,10 @@ export function Tournaments() {
         <Button onClick={fetchTournaments} disabled={loading}>Refresh</Button>
       </Stack>
       <Paper sx={{ p: 2 }}>
-        <CrudTable rows={tournaments} columns={columns} onRowClick={onEdit} />
+        <CrudTable rows={tournaments} columns={columns} onRowClick={onEdit} loading={loading} />
       </Paper>
 
-      <FormDialog open={open} title={editingId ? 'Edit Tournament' : 'New Tournament'} onClose={() => setOpen(false)} onSave={save}>
+      <FormDialog open={open} title={editingId ? 'Edit Tournament' : 'New Tournament'} onClose={() => setOpen(false)} onSave={save} saving={saving}>
         <Stack spacing={2} sx={{ mt: 1 }}>
           <TextField
             label="Name"

@@ -97,10 +97,10 @@ export function Players() {
         <Button onClick={fetchPlayers} disabled={loading}>Refresh</Button>
       </Stack>
       <Paper sx={{ p: 2 }}>
-        <CrudTable rows={players} columns={columns} onRowClick={onEdit} />
+        <CrudTable rows={players} columns={columns} onRowClick={onEdit} loading={loading} />
       </Paper>
 
-      <FormDialog open={open} title={editingId ? 'Edit Player' : 'New Player'} onClose={() => setOpen(false)} onSave={save}>
+      <FormDialog open={open} title={editingId ? 'Edit Player' : 'New Player'} onClose={() => setOpen(false)} onSave={save} saving={saving}>
         <Stack spacing={2} sx={{ mt: 1 }}>
           <TextField
             label="First Name"

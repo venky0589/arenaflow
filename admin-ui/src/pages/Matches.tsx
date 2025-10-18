@@ -158,10 +158,10 @@ export function Matches() {
         <Button onClick={fetchMatches} disabled={loading}>Refresh</Button>
       </Stack>
       <Paper sx={{ p: 2 }}>
-        <CrudTable rows={matches} columns={columns} onRowClick={onEdit} />
+        <CrudTable rows={matches} columns={columns} onRowClick={onEdit} loading={loading} />
       </Paper>
 
-      <FormDialog open={open} title={editingId ? 'Edit Match' : 'New Match'} onClose={() => setOpen(false)} onSave={save}>
+      <FormDialog open={open} title={editingId ? 'Edit Match' : 'New Match'} onClose={() => setOpen(false)} onSave={save} saving={saving}>
         <Stack spacing={2} sx={{ mt: 1 }}>
           <Autocomplete
             options={tournaments}

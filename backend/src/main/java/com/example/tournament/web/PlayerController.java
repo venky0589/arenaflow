@@ -43,33 +43,21 @@ public class PlayerController {
 
     @PostMapping
     public ResponseEntity<PlayerResponse> create(@Valid @RequestBody CreatePlayerRequest request) {
-        try {
-            Player saved = service.create(request);
-            PlayerResponse response = mapper.toResponse(saved);
-            return ResponseEntity.created(URI.create("/api/v1/players/" + saved.getId())).body(response);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().build();
-        }
+        Player saved = service.create(request);
+        PlayerResponse response = mapper.toResponse(saved);
+        return ResponseEntity.created(URI.create("/api/v1/players/" + saved.getId())).body(response);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<PlayerResponse> update(@PathVariable Long id, @Valid @RequestBody UpdatePlayerRequest request) {
-        try {
-            Player updated = service.update(id, request);
-            PlayerResponse response = mapper.toResponse(updated);
-            return ResponseEntity.ok(response);
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
+        Player updated = service.update(id, request);
+        PlayerResponse response = mapper.toResponse(updated);
+        return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> delete(@PathVariable Long id) {
-        try {
-            service.deleteById(id);
-            return ResponseEntity.noContent().build();
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        service.deleteById(id);
+        return ResponseEntity.noContent().build();
     }
 }

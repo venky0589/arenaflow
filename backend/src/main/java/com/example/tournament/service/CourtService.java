@@ -3,6 +3,8 @@ package com.example.tournament.service;
 import com.example.tournament.domain.Court;
 import com.example.tournament.dto.request.CreateCourtRequest;
 import com.example.tournament.dto.request.UpdateCourtRequest;
+import com.example.tournament.exception.DuplicateResourceException;
+import com.example.tournament.exception.ResourceNotFoundException;
 import com.example.tournament.mapper.CourtMapper;
 import com.example.tournament.repo.CourtRepository;
 import org.springframework.stereotype.Service;
@@ -54,7 +56,7 @@ public class CourtService {
      */
     public Court update(Long id, UpdateCourtRequest request) {
         Court existing = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Court not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Court", id));
 
         // Business validation: check for duplicate court name if name is being updated
         if (request.name() != null && !request.name().equals(existing.getName())) {
@@ -77,7 +79,7 @@ public class CourtService {
      */
     public void deleteById(Long id) {
         if (!repository.existsById(id)) {
-            throw new RuntimeException("Court not found with id: " + id);
+            throw new ResourceNotFoundException("Court", id);
         }
         repository.deleteById(id);
     }
@@ -98,7 +100,7 @@ public class CourtService {
                         (excludeId == null || !c.getId().equals(excludeId)));
 
         if (duplicateExists) {
-            throw new RuntimeException("Court with name '" + name + "' already exists");
+            throw new DuplicateResourceException("Court", "name", name);
         }
     }
 }

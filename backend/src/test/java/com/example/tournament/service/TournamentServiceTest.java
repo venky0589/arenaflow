@@ -3,6 +3,9 @@ package com.example.tournament.service;
 import com.example.tournament.domain.Tournament;
 import com.example.tournament.dto.request.CreateTournamentRequest;
 import com.example.tournament.dto.request.UpdateTournamentRequest;
+import com.example.tournament.exception.DuplicateResourceException;
+import com.example.tournament.exception.ResourceNotFoundException;
+import com.example.tournament.exception.ValidationException;
 import com.example.tournament.mapper.TournamentMapper;
 import com.example.tournament.repo.TournamentRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -139,7 +142,7 @@ class TournamentServiceTest {
 
         // When/Then
         assertThatThrownBy(() -> service.create(invalidRequest))
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOf(ValidationException.class)
                 .hasMessageContaining("end date must be after start date");
     }
 
@@ -163,7 +166,7 @@ class TournamentServiceTest {
 
         // When/Then
         assertThatThrownBy(() -> service.create(pastRequest))
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOf(ValidationException.class)
                 .hasMessageContaining("start date cannot be in the past");
     }
 
@@ -178,7 +181,7 @@ class TournamentServiceTest {
 
         // When/Then
         assertThatThrownBy(() -> service.create(createRequest))
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOf(DuplicateResourceException.class)
                 .hasMessageContaining("already exists");
     }
 
@@ -211,7 +214,7 @@ class TournamentServiceTest {
 
         // When/Then
         assertThatThrownBy(() -> service.update(999L, updateRequest))
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("not found");
     }
 
@@ -235,7 +238,7 @@ class TournamentServiceTest {
 
         // When/Then
         assertThatThrownBy(() -> service.deleteById(999L))
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("not found");
     }
 

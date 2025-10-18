@@ -3,6 +3,8 @@ package com.example.tournament.service;
 import com.example.tournament.domain.Player;
 import com.example.tournament.dto.request.CreatePlayerRequest;
 import com.example.tournament.dto.request.UpdatePlayerRequest;
+import com.example.tournament.exception.DuplicateResourceException;
+import com.example.tournament.exception.ValidationException;
 import com.example.tournament.mapper.PlayerMapper;
 import com.example.tournament.repo.PlayerRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -68,7 +70,7 @@ class PlayerServiceTest {
         when(repository.findAll()).thenReturn(List.of(existing));
 
         assertThatThrownBy(() -> service.create(createRequest))
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOf(DuplicateResourceException.class)
                 .hasMessageContaining("already exists");
     }
 
@@ -85,7 +87,7 @@ class PlayerServiceTest {
         CreatePlayerRequest invalidRequest = new CreatePlayerRequest("John", "Doe", "X", "1234567890");
 
         assertThatThrownBy(() -> service.create(invalidRequest))
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOf(ValidationException.class)
                 .hasMessageContaining("Gender must be");
     }
 

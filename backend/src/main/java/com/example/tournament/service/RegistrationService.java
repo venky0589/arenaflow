@@ -4,6 +4,9 @@ import com.example.tournament.domain.CategoryType;
 import com.example.tournament.domain.Registration;
 import com.example.tournament.dto.request.CreateRegistrationRequest;
 import com.example.tournament.dto.request.UpdateRegistrationRequest;
+import com.example.tournament.exception.DuplicateResourceException;
+import com.example.tournament.exception.InvalidRequestException;
+import com.example.tournament.exception.ResourceNotFoundException;
 import com.example.tournament.mapper.RegistrationMapper;
 import com.example.tournament.repo.RegistrationRepository;
 import org.springframework.stereotype.Service;
@@ -46,10 +49,10 @@ public class RegistrationService {
 
         // Business validation: ensure tournament and player are set
         if (registration.getTournament() == null) {
-            throw new RuntimeException("Registration must be associated with a tournament");
+            throw new InvalidRequestException("Registration must be associated with a tournament");
         }
         if (registration.getPlayer() == null) {
-            throw new RuntimeException("Registration must be associated with a player");
+            throw new InvalidRequestException("Registration must be associated with a player");
         }
 
         // Business validation: prevent duplicate registrations (same player, tournament, category)
@@ -68,7 +71,7 @@ public class RegistrationService {
      */
     public Registration update(Long id, UpdateRegistrationRequest request) {
         Registration existing = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Registration not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Registration", id));
 
         Registration updates = mapper.toEntity(request);
 
@@ -109,7 +112,7 @@ public class RegistrationService {
      */
     public void deleteById(Long id) {
         if (!repository.existsById(id)) {
-            throw new RuntimeException("Registration not found with id: " + id);
+            throw new ResourceNotFoundException("Registration", id);
         }
         repository.deleteById(id);
     }
@@ -133,7 +136,7 @@ public class RegistrationService {
                         (excludeId == null || !r.getId().equals(excludeId)));
 
         if (duplicateExists) {
-            throw new RuntimeException("Player is already registered for this tournament in this category");
+            throw new DuplicateResourceException("Player is already registered for this tournament in this category");
         }
     }
 }

@@ -5,6 +5,9 @@ import com.example.tournament.domain.MatchStatus;
 import com.example.tournament.dto.request.CreateMatchRequest;
 import com.example.tournament.dto.request.UpdateMatchRequest;
 import com.example.tournament.dto.request.UpdateMatchScoreRequest;
+import com.example.tournament.exception.InvalidRequestException;
+import com.example.tournament.exception.ResourceNotFoundException;
+import com.example.tournament.exception.ValidationException;
 import com.example.tournament.mapper.MatchMapper;
 import com.example.tournament.repo.MatchRepository;
 import org.springframework.stereotype.Service;
@@ -47,13 +50,13 @@ public class MatchService {
 
         // Business validation: ensure tournament is set
         if (match.getTournament() == null) {
-            throw new RuntimeException("Match must be associated with a tournament");
+            throw new InvalidRequestException("Match must be associated with a tournament");
         }
 
         // Business validation: ensure players are different
         if (match.getPlayer1() != null && match.getPlayer2() != null) {
             if (match.getPlayer1().getId().equals(match.getPlayer2().getId())) {
-                throw new RuntimeException("A player cannot play against themselves");
+                throw new ValidationException("A player cannot play against themselves");
             }
         }
 
@@ -75,14 +78,14 @@ public class MatchService {
      */
     public Match update(Long id, UpdateMatchRequest request) {
         Match existing = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Match not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Match", id));
 
         Match updates = mapper.toEntity(request);
 
         // Business validation: ensure players are different if both being updated
         if (updates.getPlayer1() != null && updates.getPlayer2() != null) {
             if (updates.getPlayer1().getId().equals(updates.getPlayer2().getId())) {
-                throw new RuntimeException("A player cannot play against themselves");
+                throw new ValidationException("A player cannot play against themselves");
             }
         }
 
@@ -127,7 +130,7 @@ public class MatchService {
      */
     public Match updateScore(Long id, UpdateMatchScoreRequest request) {
         Match existing = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Match not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Match", id));
 
         validateScores(request.score1(), request.score2());
 
@@ -147,7 +150,7 @@ public class MatchService {
      */
     public Match updateStatus(Long id, MatchStatus status) {
         Match existing = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Match not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Match", id));
 
         existing.setStatus(status);
 
@@ -159,7 +162,7 @@ public class MatchService {
      */
     public void deleteById(Long id) {
         if (!repository.existsById(id)) {
-            throw new RuntimeException("Match not found with id: " + id);
+            throw new ResourceNotFoundException("Match", id);
         }
         repository.deleteById(id);
     }
@@ -175,10 +178,10 @@ public class MatchService {
 
     private void validateScores(Integer score1, Integer score2) {
         if (score1 != null && score1 < 0) {
-            throw new RuntimeException("Score cannot be negative");
+            throw new ValidationException("Score cannot be negative");
         }
         if (score2 != null && score2 < 0) {
-            throw new RuntimeException("Score cannot be negative");
+            throw new ValidationException("Score cannot be negative");
         }
     }
 }

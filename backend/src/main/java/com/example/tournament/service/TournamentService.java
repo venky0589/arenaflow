@@ -3,6 +3,9 @@ package com.example.tournament.service;
 import com.example.tournament.domain.Tournament;
 import com.example.tournament.dto.request.CreateTournamentRequest;
 import com.example.tournament.dto.request.UpdateTournamentRequest;
+import com.example.tournament.exception.DuplicateResourceException;
+import com.example.tournament.exception.ResourceNotFoundException;
+import com.example.tournament.exception.ValidationException;
 import com.example.tournament.mapper.TournamentMapper;
 import com.example.tournament.repo.TournamentRepository;
 import org.springframework.stereotype.Service;
@@ -58,7 +61,7 @@ public class TournamentService {
      */
     public Tournament update(Long id, UpdateTournamentRequest request) {
         Tournament existing = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Tournament not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Tournament", id));
 
         // Business validation for dates
         if (request.startDate() != null && request.endDate() != null) {
@@ -92,7 +95,7 @@ public class TournamentService {
      */
     public void deleteById(Long id) {
         if (!repository.existsById(id)) {
-            throw new RuntimeException("Tournament not found with id: " + id);
+            throw new ResourceNotFoundException("Tournament", id);
         }
         repository.deleteById(id);
     }
@@ -113,13 +116,13 @@ public class TournamentService {
 
         // Validate start date is not in the past
         if (tournament.getStartDate() != null && tournament.getStartDate().isBefore(LocalDate.now())) {
-            throw new RuntimeException("Tournament start date cannot be in the past");
+            throw new ValidationException("Tournament start date cannot be in the past");
         }
     }
 
     private void validateDates(LocalDate startDate, LocalDate endDate) {
         if (endDate.isBefore(startDate)) {
-            throw new RuntimeException("Tournament end date must be after start date");
+            throw new ValidationException("Tournament end date must be after start date");
         }
     }
 
@@ -130,7 +133,7 @@ public class TournamentService {
                         (excludeId == null || !t.getId().equals(excludeId)));
 
         if (duplicateExists) {
-            throw new RuntimeException("Tournament with name '" + name + "' already exists");
+            throw new DuplicateResourceException("Tournament", "name", name);
         }
     }
 }

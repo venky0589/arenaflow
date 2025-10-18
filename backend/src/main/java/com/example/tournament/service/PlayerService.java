@@ -3,6 +3,9 @@ package com.example.tournament.service;
 import com.example.tournament.domain.Player;
 import com.example.tournament.dto.request.CreatePlayerRequest;
 import com.example.tournament.dto.request.UpdatePlayerRequest;
+import com.example.tournament.exception.DuplicateResourceException;
+import com.example.tournament.exception.ResourceNotFoundException;
+import com.example.tournament.exception.ValidationException;
 import com.example.tournament.mapper.PlayerMapper;
 import com.example.tournament.repo.PlayerRepository;
 import org.springframework.stereotype.Service;
@@ -59,7 +62,7 @@ public class PlayerService {
      */
     public Player update(Long id, UpdatePlayerRequest request) {
         Player existing = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Player not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Player", id));
 
         // Business validation: check for duplicate player names (excluding current player)
         if (request.firstName() != null || request.lastName() != null) {
@@ -98,7 +101,7 @@ public class PlayerService {
      */
     public void deleteById(Long id) {
         if (!repository.existsById(id)) {
-            throw new RuntimeException("Player not found with id: " + id);
+            throw new ResourceNotFoundException("Player", id);
         }
         repository.deleteById(id);
     }
@@ -120,7 +123,7 @@ public class PlayerService {
                         (excludeId == null || !p.getId().equals(excludeId)));
 
         if (duplicateExists) {
-            throw new RuntimeException("Player with name '" + firstName + " " + lastName + "' already exists");
+            throw new DuplicateResourceException("Player with name '" + firstName + " " + lastName + "' already exists");
         }
     }
 
@@ -128,7 +131,7 @@ public class PlayerService {
         if (gender != null && !gender.isEmpty()) {
             String upperGender = gender.toUpperCase();
             if (!upperGender.equals("M") && !upperGender.equals("F")) {
-                throw new RuntimeException("Gender must be 'M' or 'F'");
+                throw new ValidationException("Gender must be 'M' or 'F'");
             }
         }
     }

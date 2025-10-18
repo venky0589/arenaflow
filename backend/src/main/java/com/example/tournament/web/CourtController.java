@@ -43,33 +43,21 @@ public class CourtController {
 
     @PostMapping
     public ResponseEntity<CourtResponse> create(@Valid @RequestBody CreateCourtRequest request) {
-        try {
-            Court saved = service.create(request);
-            CourtResponse response = mapper.toResponse(saved);
-            return ResponseEntity.created(URI.create("/api/v1/courts/" + saved.getId())).body(response);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().build();
-        }
+        Court saved = service.create(request);
+        CourtResponse response = mapper.toResponse(saved);
+        return ResponseEntity.created(URI.create("/api/v1/courts/" + saved.getId())).body(response);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<CourtResponse> update(@PathVariable Long id, @Valid @RequestBody UpdateCourtRequest request) {
-        try {
-            Court updated = service.update(id, request);
-            CourtResponse response = mapper.toResponse(updated);
-            return ResponseEntity.ok(response);
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
+        Court updated = service.update(id, request);
+        CourtResponse response = mapper.toResponse(updated);
+        return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> delete(@PathVariable Long id) {
-        try {
-            service.deleteById(id);
-            return ResponseEntity.noContent().build();
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        service.deleteById(id);
+        return ResponseEntity.noContent().build();
     }
 }

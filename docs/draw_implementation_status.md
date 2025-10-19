@@ -1,14 +1,80 @@
 # Draw Generation & Bracket System - Implementation Status
 
-**Implementation Date**: 2025-10-19
-**Status**: ✅ **COMPLETED** (All 10 phases)
-**Commits**: 10 commits (one per phase)
+**Initial Implementation Date**: 2025-10-19
+**Alignment Refactor Date**: 2025-10-19
+**Status**: ✅ **COMPLETED & ALIGNED** (All 10 phases + alignment)
+**Commits**: 11 commits (10 implementation + 1 alignment)
 
 ---
 
 ## Overview
 
 Successfully implemented **single-elimination draw generation** for badminton tournaments with automatic seeding, BYE handling, and bracket tree management.
+
+**Update (2025-10-19)**: Refactored bracket code to align with existing codebase patterns, including custom exceptions, standard DTO structure, mapper components, and comprehensive error handling.
+
+---
+
+## 🔄 Alignment Phase (2025-10-19)
+
+**Goal**: Align bracket implementation with existing codebase patterns and best practices.
+
+**Changes Made**:
+
+1. **Custom Exception Classes** - Created 5 domain-specific exceptions:
+   - `BracketAlreadyExistsException` - For 409 Conflict when bracket exists
+   - `InsufficientParticipantsException` - For < 2 participants
+   - `DuplicateSeedNumberException` - For duplicate seed numbers
+   - `InvalidSeedRegistrationException` - For invalid registration references
+   - `BracketInProgressException` - For attempting to delete active brackets
+
+2. **Standardized DTO Structure**:
+   - Moved DTOs from `web.dto` to standard `dto.request` and `dto.response` packages
+   - Aligned with existing project patterns (TournamentDTO, PlayerDTO, etc.)
+   - Files: `SeedEntry`, `DrawGenerateRequest`, `MatchDto`, `BracketSummaryResponse`
+
+3. **Mapper Component**:
+   - Created `BracketMapper` as `@Component` for Spring injection
+   - Consistent with existing `TournamentMapper`, `PlayerMapper` patterns
+   - Methods: `toMatchDto()`, `toBracketSummaryResponse()`, `toSeedEntity()`
+
+4. **GlobalExceptionHandler Integration**:
+   - Added 5 new exception handlers for bracket-specific exceptions
+   - Consistent HTTP status codes (400, 404, 409)
+   - Structured error responses with path and timestamp
+
+5. **BracketServiceImpl Improvements**:
+   - Replaced all generic exceptions with custom domain exceptions
+   - Injected `BracketMapper` for DTO conversion
+   - Removed inline mapping logic
+
+6. **BracketController Simplification**:
+   - Removed all try-catch blocks (exceptions handled by @RestControllerAdvice)
+   - Updated imports to use new DTO locations
+   - Cleaner, more readable controller methods
+
+7. **Match Entity Consistency**:
+   - Fixed naming: `isBye` → `bye`, `getIsBye()` → `getBye()`, `setIsBye()` → `setBye()`
+   - Aligns with Java bean naming conventions
+
+8. **Test Updates**:
+   - Updated `BracketServiceImplTest` to use custom exceptions
+   - Added `BracketMapper` to test setup
+   - Fixed assertions to match new exception types
+   - All 19 tests passing (9 service + 10 utility)
+
+9. **Cleanup**:
+   - Deleted old `web.dto` bracket-related files
+   - Retained auth DTOs in `web.dto` (LoginRequest, RegisterRequest, LoginResponse)
+
+**Files Modified**: 13 files
+**Files Created**: 9 files (5 exceptions + 4 DTOs)
+**Files Deleted**: 4 files (old DTO locations)
+
+**Testing**:
+- ✅ Compilation successful
+- ✅ All unit tests passing (19/19)
+- ✅ Code follows existing patterns
 
 ---
 

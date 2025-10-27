@@ -1,9 +1,9 @@
 [submodule "admin-ui"]
 	path = admin-ui
-	url = ../admin-ui-repo
+	url = https://github.com/venky0589/arenaflow-admin.git
 [submodule "backend"]
 	path = backend
-	url = ../backend-repo
+	url = https://github.com/venky0589/arenaflow-api.git
 [submodule "user-ui"]
 	path = user-ui
-	url = ../user-ui-repo
+	url = https://github.com/venky0589/arenaflow-user.git

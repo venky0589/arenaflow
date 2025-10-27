@@ -1,0 +1,101 @@
+{
+  "info": {
+    "name": "Tournament Bracket API (Tailored)",
+    "_postman_id": "bkt-tailored-20251019052836",
+    "description": "Endpoints for draw generation and viewing the bracket",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Generate Draw",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/tournaments/{{tId}}/categories/{{cId}}/draw:generate",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "tournaments",
+            "{{tId}}",
+            "categories",
+            "{{cId}}",
+            "draw:generate"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"overwriteIfDraft\": true,\n  \"seeds\": [\n    {\n      \"registrationId\": 1,\n      \"seedNumber\": 1\n    }\n  ]\n}"
+        }
+      }
+    },
+    {
+      "name": "Get Bracket",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/categories/{{cId}}/bracket",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "categories",
+            "{{cId}}",
+            "bracket"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Delete Draft Bracket",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/categories/{{cId}}/bracket?draft=true",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "categories",
+            "{{cId}}",
+            "bracket"
+          ],
+          "query": [
+            {
+              "key": "draft",
+              "value": "true"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "tId",
+      "value": "1"
+    },
+    {
+      "key": "cId",
+      "value": "1"
+    }
+  ]
+}

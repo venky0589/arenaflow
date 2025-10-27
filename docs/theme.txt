@@ -1,0 +1,41 @@
+Theme: Dark sports UI theme with black/dark grey surfaces (#161616 / #1E1E1E), bold orange primary accent (#F44A22, variant #FF5722), off-white text (#FEF8E8), secondary text #A8AAAC, dividers #2A2A2A, occasional light-grey chips #E4E2E3; Material 3, high contrast, sporty CTA emphasis.
+
+
+
+ADMIN UI
+■ Tournament Dashboard
+Design an admin dashboard for a badminton tournament management web app using
+Material 3. Show tournament summary cards (Ongoing, Upcoming, Completed), player
+count, and total matches. Include a navigation sidebar with icons and a top bar showing
+the admin profile. 
+■ Player Management
+Create an admin page for managing players in a badminton tournament app. Show a
+searchable, sortable player list with name, category, ranking, and edit/delete icons. Include
+an ‘Add Player’ floating button. Use card-based Material 3 design with above theme.
+■ Match Scheduling
+Generate a web UI screen for scheduling matches in a badminton tournament. Include
+dropdowns for selecting category and court, date/time picker, and a table showing
+assigned matches. Show a ‘Generate Schedule’ button. Use Material 3 layout with above theme and subtle shadow cards.
+■ Court Assignment
+Design an admin interface for assigning matches to courts in a tournament. Show a grid of
+courts with color indicators (Available, Ongoing, Completed). Each court card shows
+match number, player names, and start time. Use above theme and accent colors
+for status indicators.
+■ Bracket & Draw View
+Create a bracket visualization screen for an admin web dashboard. Use a horizontal
+knockout bracket layout with round labels (Quarterfinal, Semifinal, Final). Include a toolbar
+with filters for category and gender. Apply theme mentioned above. with subtle colored
+lines.
+
+
+| Role                            | Color Name         | HEX       | Recommended Usage                                                      |
+| ------------------------------- | ------------------ | --------- | ---------------------------------------------------------------------- |
+| **Primary**                     | **Orange Red**     | `#F44A22` | Primary accent color — buttons, highlights, active state, icons, links |
+| **Primary Variant**             | **Warm Orange**    | `#FF5722` | Hover/pressed state, call-to-action emphasis                           |
+| **Background (Main)**           | **Midnight Black** | `#161616` | Page background for dark mode                                          |
+| **Surface (Card Background)**   | **Dark Grey**      | `#1E1E1E` | Panels, cards, modals                                                  |
+| **Text Primary**                | **Silver White**   | `#FEF8E8` | Headings, labels on dark background                                    |
+| **Text Secondary**              | **Stone Grey**     | `#A8AAAC` | Secondary text, muted labels                                           |
+| **Border / Divider**            | **Neutral Grey**   | `#2A2A2A` | Table/grid lines, dividers                                             |
+| **Highlight / Info Background** | **Light Grey**     | `#E4E2E3` | Tooltips, light overlays                                               |
+

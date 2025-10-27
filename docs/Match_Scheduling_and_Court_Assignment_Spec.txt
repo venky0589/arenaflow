@@ -1,0 +1,259 @@
+practical blueprint for Match Scheduling & Court Assignment (PRIORITY-3) so your other agent can implement with fewer unknowns.
+
+Goals (what “done” looks like)
+
+Auto-create a time-ordered schedule for all matches in selected rounds/categories.
+
+Assign each match to a court and start time respecting constraints.
+
+Support partial rescheduling and manual overrides without breaking consistency.
+
+Provide live operations tools on event day (delay handling, swaps, rebalances).
+
+Persist all actions with auditability and idempotency.
+
+Inputs
+
+Tournament (dates, daily start/end, venue, courts).
+
+Draws → list of matches per round with player/team references.
+
+Category rules (Singles/Doubles, age/gender, round lengths).
+
+Operational settings:
+
+Match duration by category (default + per-round overrides), e.g., S: 30–35 min, D: 35–45 min.
+
+Buffer between matches per court (e.g., 5–10 min).
+
+Min rest between a player’s matches (e.g., 45–60 min).
+
+Court availability windows & blackouts.
+
+Priorities (e.g., finish U11 by noon, center court for finals).
+
+Max concurrent matches per player (always 1, but player can be in multiple categories across the day → conflict resolution needed).
+
+Outputs
+
+ScheduleSlot objects: {matchId, courtId, startTime, expectedEndTime, status}.
+
+Validation report: conflicts, soft-constraint warnings, unplaceable matches.
+
+Change log (who/when/what) for manual edits.
+
+Constraints
+
+Hard (must not violate)
+
+No overlapping matches for the same player/team.
+
+Court capacity = 1 match at a time (+ buffer).
+
+Court availability windows.
+
+Round order (R32 before R16 before QF, etc.); dependencies from draw.
+
+Idempotency: same input + same policy → same schedule.
+
+Soft (optimize for)
+
+Reasonable player rest ≥ minRest; more rest preferred.
+
+Avoid back-to-back for players in multiple categories.
+
+Court fairness (distribute usage across courts/categories).
+
+Viewer experience (seeded matches or finals on show court).
+
+Minimize idle courts.
+
+Data model (minimal additions; no code)
+
+court (id, name, venueId, isActive).
+
+court_availability (courtId, day, startTime, endTime, notes).
+
+tournament_settings (defaultDurationByCategory, bufferMinutes, minRestMinutes, priorities JSON).
+
+match (already exists from draw; add fields: scheduledStart, scheduledEnd, courtId, schedulingStatus [UNASSIGNED|SCHEDULED|LOCKED|IN_PROGRESS|COMPLETED|WALKOVER|CANCELLED], schedulingBatchId, notes).
+
+scheduling_batch (id, tournamentId, createdBy, createdAt, params JSON, score, summary).
+
+scheduling_audit (id, matchId, prev→new assignment, reason, actor, timestamp).
+
+Scheduling flow (recommended)
+
+Prepare candidate pool
+
+Filter matches by round/category/day as selected.
+
+Topologically sort by dependencies (earlier rounds first).
+
+Generate time grid
+
+For each court, create free intervals from availability minus existing locked matches and buffers.
+
+Assign matches
+
+For each match in order, compute feasible windows:
+
+Earliest time ≥ max(all prerequisites end + buffer, player minRest).
+
+Within any court’s free interval.
+
+Score each (court, startTime) option:
+
+Rest margin (more is better)
+
+Court priority fit (finals → show court)
+
+Balance factor (underused court favored)
+
+– Player multi-category proximity
+
+Pick best; reserve interval + buffer; update player availability.
+
+Backtracking light
+
+If no feasible slot, attempt local swaps within a bounded horizon (e.g., next 3 matches on same court/day).
+
+If still impossible → flag as UNASSIGNED with reason.
+
+Finalize & lock (optional)
+
+Organizer may LOCK specific matches to prevent auto changes.
+
+This is a greedy with scoring + bounded backtracking heuristic. It’s fast, explainable, and good enough for MVP. We can later add a CP-SAT/ILP “optimize whole day” mode as P5.
+
+Rescheduling & live operations
+
+Delay ripple: if a match runs late, offer:
+
+Push only dependent matches.
+
+Repack the affected court’s next N matches.
+
+Global small shuffle respecting locks.
+
+Swap tool: swap two scheduled matches (auto re-check constraints).
+
+Drag-and-drop UI on a Gantt-style board (Courts as lanes, time horizontally).
+
+Lock any match to freeze it.
+
+Partial regenerate: re-run scheduler only for a selection (e.g., afternoon, Court 3, or Category U13).
+
+Admin UI (no code; UX spec)
+
+Schedule Board (Gantt):
+
+Lanes: Court 1..N
+
+Cards: Match (Round, Category, Players, seed markers, duration).
+
+Colors: category-coded; lock icon if locked; warning badges for soft violations.
+
+Show rest countdown for each player involved in upcoming matches.
+
+Conflict Panel:
+
+Hard conflicts (red), soft warnings (amber), with quick actions.
+
+Bulk Actions:
+
+“Schedule day”, “Schedule selected rounds”, “Reshuffle affected”.
+
+What-if Simulation:
+
+Run scheduler in draft mode (no writes) → show diff & score → confirm apply.
+
+API surface (contracts, not code)
+
+POST /scheduling/simulate
+
+Body: { tournamentId, day, includeCategories[], includeRounds[], policyOverrides? }
+
+Returns: { proposal: [ScheduleSlot…], warnings[], score, diffFromCurrent }
+
+POST /scheduling/apply
+
+Body: { tournamentId, batchProposalId, lockNew?: boolean }
+
+Returns: { applied: count, locked: count, unassigned[] }
+
+POST /scheduling/reschedule
+
+Body: { scope: {courtIds?|matchIds?|categories?|timeRange?}, strategy: "local"|"global-lite", respectLocks: true }
+
+PATCH /matches/{id}/lock | /unlock
+
+POST /scheduling/delay
+
+Body: { matchId, actualStart|actualEnd, strategy }
+
+GET /scheduling/conflicts?tournamentId=…&day=…
+
+GET /schedule?tournamentId=…&day=… (for UI board)
+
+Idempotency-Key header supported for apply/apply-again safety.
+
+Policies & defaults (we should agree now)
+
+Default durations (tune per your event style):
+
+U11/U13 singles: 25–30m; Seniors singles: 30–35m; Doubles: +5–10m vs singles.
+
+Buffer per match: 5–10m (court reset + walk-in).
+
+Min rest per player: 45m (junior) / 60m (senior). Enforced as hard.
+
+Round sequencing: Strict; cross-category conflicts win over soft preferences.
+
+Court priorities: Finals → Court-1, Semis → 1 or 2 if available.
+
+Manual always wins: Any manual lock is a hard constraint.
+
+Edge cases to cover
+
+Players in multiple categories back-to-back → scheduler must postpone later match.
+
+Walkover (WO) → instantly free slot and pull next match forward (optional auto-pull).
+
+No-show (NS) timeout → configurable (e.g., 10m), then WO rule.
+
+Late entries / redraws → invalidate dependent matches; re-schedule only affected subtree.
+
+Weather/venue blackout (if outdoor) → mark courts unavailable; global re-pack.
+
+Time-cap days (e.g., venue closes at 8pm) → unplaceable matches surfaced early.
+
+Testing plan (acceptance criteria)
+
+No conflicts: zero overlapping matches for any player; hard constraint violations = 0.
+
+Resource use: no overlaps per court including buffers.
+
+Rest gaps: all ≥ minRest; soft warnings listed if exactly at threshold.
+
+Idempotency: same inputs → identical schedule.
+
+Partial regenerate: reschedules only in scope; locked matches unchanged.
+
+Delay ripple: applying a 20m delay on Court-2 adjusts downstream within chosen window without new violations.
+
+Performance: schedule 300 matches / 6 courts / 2 days in < 3s on typical server.
+
+Implementation notes (for your agent)
+
+Use interval trees (or ordered maps) to manage court free intervals efficiently.
+
+Maintain player availability map keyed by playerId → nextAvailableTime.
+
+Keep a priority queue of schedulable matches by earliest feasible time.
+
+Scoring function weights configurable; log the chosen score per assignment for auditability.
+
+Persist a scheduling_batch for each run; metrics (filled %, mean rest, court balance).
+
+Provide dry-run mode everywhere.

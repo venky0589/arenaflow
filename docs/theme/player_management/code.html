@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Player Management</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#F44A22",
+                        "primary-variant": "#FF5722",
+                        "background-light": "#1E1E1E",
+                        "background-dark": "#1E1E1E",
+                        "surface-dark": "#161616",
+                        "text-light": "#FEF8E8",
+                        "text-secondary": "#A8AAAC",
+                        "divider": "#2A2A2A",
+                        "chip-light": "#E4E2E3"
+                    },
+                    fontFamily: {
+                        "display": ["Lexend", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background-dark font-display">
+<div class="relative min-h-screen">
+<div class="flex flex-col max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+<header class="bg-surface-dark sticky top-0 z-10 py-4">
+<div class="flex items-center justify-between">
+<h1 class="text-2xl font-bold text-text-light">Player Management</h1>
+</div>
+</header>
+<main class="flex-grow pt-6">
+<div class="space-y-6">
+<div class="flex flex-col md:flex-row md:items-center gap-4">
+<div class="flex-grow">
+<label class="relative text-text-secondary focus-within:text-primary">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                                    search
+                                </span>
+<input class="form-input w-full pl-10 pr-4 py-3 bg-[#2A2A2A] border-none rounded-xl text-text-light placeholder-text-secondary focus:ring-2 focus:ring-primary" placeholder="Search by player name..." type="text"/>
+</label>
+</div>
+<div class="flex items-center gap-2 overflow-x-auto pb-2">
+<span class="text-text-secondary text-sm whitespace-nowrap">Sort by:</span>
+<button class="flex items-center justify-center h-10 px-4 rounded-lg bg-chip-light text-surface-dark text-sm font-medium hover:bg-chip-light/80">
+                                Name
+                                <span class="material-symbols-outlined text-lg ml-1">unfold_more</span>
+</button>
+<button class="flex items-center justify-center h-10 px-4 rounded-lg bg-[#2A2A2A] text-text-secondary text-sm font-medium hover:bg-[#3A3A3A]">
+                                Category
+                                <span class="material-symbols-outlined text-lg ml-1">unfold_more</span>
+</button>
+<button class="flex items-center justify-center h-10 px-4 rounded-lg bg-[#2A2A2A] text-text-secondary text-sm font-medium hover:bg-[#3A3A3A]">
+                                Ranking
+                                <span class="material-symbols-outlined text-lg ml-1">unfold_more</span>
+</button>
+</div>
+</div>
+<div class="space-y-4">
+<div class="bg-surface-dark rounded-xl shadow-lg p-5 border border-divider">
+<div class="flex items-center justify-between">
+<div>
+<h3 class="text-lg font-semibold text-text-light">John Doe</h3>
+<p class="text-sm text-text-secondary">Men's Singles U19 • Rank: 12</p>
+</div>
+<div class="flex items-center gap-2">
+<button class="p-2 rounded-full text-text-secondary hover:bg-primary/20 hover:text-primary-variant transition-colors">
+<span class="material-symbols-outlined">edit</span>
+</button>
+<button class="p-2 rounded-full text-text-secondary hover:bg-primary/20 hover:text-primary-variant transition-colors">
+<span class="material-symbols-outlined">delete</span>
+</button>
+</div>
+</div>
+</div>
+<div class="bg-surface-dark rounded-xl shadow-lg p-5 border border-divider">
+<div class="flex items-center justify-between">
+<div>
+<h3 class="text-lg font-semibold text-text-light">Jane Smith</h3>
+<p class="text-sm text-text-secondary">Women's Doubles • Rank: 5</p>
+</div>
+<div class="flex items-center gap-2">
+<button class="p-2 rounded-full text-text-secondary hover:bg-primary/20 hover:text-primary-variant transition-colors">
+<span class="material-symbols-outlined">edit</span>
+</button>
+<button class="p-2 rounded-full text-text-secondary hover:bg-primary/20 hover:text-primary-variant transition-colors">
+<span class="material-symbols-outlined">delete</span>
+</button>
+</div>
+</div>
+</div>
+<div class="bg-surface-dark rounded-xl shadow-lg p-5 border border-divider">
+<div class="flex items-center justify-between">
+<div>
+<h3 class="text-lg font-semibold text-text-light">Peter Jones</h3>
+<p class="text-sm text-text-secondary">Mixed Doubles • Rank: 8</p>
+</div>
+<div class="flex items-center gap-2">
+<button class="p-2 rounded-full text-text-secondary hover:bg-primary/20 hover:text-primary-variant transition-colors">
+<span class="material-symbols-outlined">edit</span>
+</button>
+<button class="p-2 rounded-full text-text-secondary hover:bg-primary/20 hover:text-primary-variant transition-colors">
+<span class="material-symbols-outlined">delete</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Empty State Example -->
+<!-- <div class="text-center py-16">
+                             <span class="material-symbols-outlined text-6xl text-divider">group_off</span>
+                             <h3 class="mt-4 text-xl font-semibold text-text-light">No players found.</h3>
+                             <p class="mt-1 text-text-secondary">Get started by adding a new player.</p>
+                             <div class="mt-6">
+                                <button class="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-primary text-white font-bold hover:bg-primary-variant shadow-lg">
+                                    <span class="material-symbols-outlined">add</span>
+                                    Add Player
+                                </button>
+                             </div>
+                        </div> -->
+</div>
+</div>
+</main>
+</div>
+<div class="fixed bottom-8 right-8 group">
+<button class="flex items-center justify-center h-16 w-16 bg-primary rounded-full shadow-lg hover:bg-primary-variant transition-transform transform hover:scale-105" title="Add New Player">
+<span class="material-symbols-outlined text-3xl text-white">add</span>
+</button>
+</div>
+</div>
+</body></html>

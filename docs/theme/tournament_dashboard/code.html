@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Admin Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#F44A22",
+                        "primary-variant": "#FF5722",
+                        "background-light": "#f8f6f5",
+                        "background-dark": "#161616",
+                        "surface-dark": "#1E1E1E",
+                        "text-light": "#FEF8E8",
+                        "text-secondary": "#A8AAAC",
+                        "divider": "#2A2A2A",
+                        "chip": "#E4E2E3"
+                    },
+                    fontFamily: {
+                        "display": ["Lexend", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.5rem",
+                        "lg": "0.75rem",
+                        "xl": "1rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background-dark font-display">
+<div class="relative flex min-h-screen w-full flex-row">
+<!-- SideNavBar -->
+<div class="flex flex-col bg-surface-dark h-screen p-4 sticky top-0" style="width: 280px;">
+<div class="flex items-center gap-3 mb-8 px-3 py-2">
+<span class="material-symbols-outlined text-primary text-3xl">sports_tennis</span>
+<h1 class="text-text-light text-xl font-bold">Badminton Admin</h1>
+</div>
+<div class="flex flex-col gap-2 flex-grow">
+<div class="flex items-center gap-3 px-3 py-2 rounded-lg bg-primary">
+<span class="material-symbols-outlined text-white">dashboard</span>
+<p class="text-white text-sm font-medium">Dashboard</p>
+</div>
+<div class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-primary/20 cursor-pointer">
+<span class="material-symbols-outlined text-text-secondary">emoji_events</span>
+<p class="text-text-light text-sm font-medium">Tournaments</p>
+</div>
+<div class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-primary/20 cursor-pointer">
+<span class="material-symbols-outlined text-text-secondary">groups</span>
+<p class="text-text-light text-sm font-medium">Players</p>
+</div>
+<div class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-primary/20 cursor-pointer">
+<span class="material-symbols-outlined text-text-secondary">sports_tennis</span>
+<p class="text-text-light text-sm font-medium">Matches</p>
+</div>
+<div class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-primary/20 cursor-pointer">
+<span class="material-symbols-outlined text-text-secondary">analytics</span>
+<p class="text-text-light text-sm font-medium">Analytics</p>
+</div>
+<div class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-primary/20 cursor-pointer">
+<span class="material-symbols-outlined text-text-secondary">settings</span>
+<p class="text-text-light text-sm font-medium">Settings</p>
+</div>
+</div>
+<div class="flex flex-col gap-4 mt-auto">
+<div class="border-t border-divider my-2"></div>
+<div class="flex items-center gap-3 px-3">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10" data-alt="Admin avatar" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAJGHg3RknJFo-HkLLcOiSPkPEyM5ha1-LqabWuo6dnRvrOT7sYFZVHE5NQm9vUe5oLxFIrUJNOgHG0dJSxjoaSy4qv4SqyTv9a_AGbri4YSTSiyn9mCsPzvG8znlT8GnCmC40xHJy-2RT0IRPFnz7mQHxan_SoAI46nXhQ6eTXatNqKA8Fotb7muZqDvfH8M6Ka-JpZ6cBHDeiqS31V7itGMNfVyXldUDwKX9nxYIXjGji5Yub2K-7_vDO89WgPhmPps_n2nrF");'></div>
+<div class="flex flex-col">
+<h1 class="text-text-light text-base font-medium">Admin</h1>
+<p class="text-text-secondary text-sm font-normal">admin@email.com</p>
+</div>
+</div>
+<button class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-primary text-white text-sm font-bold tracking-wider hover:bg-primary-variant">
+<span class="truncate">Logout</span>
+</button>
+</div>
+</div>
+<!-- Main Content -->
+<main class="flex-1 p-8 overflow-y-auto">
+<div class="max-w-7xl mx-auto">
+<!-- PageHeading -->
+<div class="flex flex-wrap justify-between items-center gap-4 mb-8">
+<p class="text-text-light text-4xl font-black tracking-tight">Dashboard</p>
+<button class="flex items-center justify-center gap-2 min-w-[84px] cursor-pointer overflow-hidden rounded-lg h-11 px-6 bg-primary text-white text-sm font-bold tracking-wider hover:bg-primary-variant">
+<span class="material-symbols-outlined">add</span>
+<span class="truncate">Create Tournament</span>
+</button>
+</div>
+<!-- Stats -->
+<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 mb-8">
+<div class="flex flex-col gap-2 rounded-lg p-6 bg-surface-dark border border-divider">
+<p class="text-text-secondary text-base font-medium">Ongoing Tournaments</p>
+<p class="text-text-light tracking-light text-3xl font-bold">3</p>
+</div>
+<div class="flex flex-col gap-2 rounded-lg p-6 bg-surface-dark border border-divider">
+<p class="text-text-secondary text-base font-medium">Upcoming Tournaments</p>
+<p class="text-text-light tracking-light text-3xl font-bold">5</p>
+</div>
+<div class="flex flex-col gap-2 rounded-lg p-6 bg-surface-dark border border-divider">
+<p class="text-text-secondary text-base font-medium">Completed Tournaments</p>
+<p class="text-text-light tracking-light text-3xl font-bold">12</p>
+</div>
+<div class="flex flex-col gap-2 rounded-lg p-6 bg-surface-dark border border-divider">
+<p class="text-text-secondary text-base font-medium">Total Registered Players</p>
+<p class="text-text-light tracking-light text-3xl font-bold">150</p>
+</div>
+<div class="flex flex-col gap-2 rounded-lg p-6 bg-surface-dark border border-divider">
+<p class="text-text-secondary text-base font-medium">Total Matches Played</p>
+<p class="text-text-light tracking-light text-3xl font-bold">280</p>
+</div>
+</div>
+<!-- SectionHeader -->
+<h2 class="text-text-light text-2xl font-bold tracking-tight mb-4">Recent Tournament Activity</h2>
+<!-- Table -->
+<div class="overflow-x-auto">
+<div class="overflow-hidden rounded-lg border border-divider bg-surface-dark">
+<table class="min-w-full divide-y divide-divider">
+<thead class="bg-surface-dark">
+<tr>
+<th class="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider" scope="col">Tournament Name</th>
+<th class="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider" scope="col">Status</th>
+<th class="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider" scope="col">Dates</th>
+<th class="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider" scope="col">No. of Players</th>
+<th class="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider" scope="col">Actions</th>
+</tr>
+</thead>
+<tbody class="bg-surface-dark divide-y divide-divider">
+<tr>
+<td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-text-light">Summer Open 2024</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm">
+<span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-chip text-black">Ongoing</span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-text-secondary">Aug 1 - Aug 10, 2024</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-text-secondary">32</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+<a class="text-primary hover:text-primary-variant" href="#">View</a>
+</td>
+</tr>
+<tr>
+<td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-text-light">City Championship</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm">
+<span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-chip text-black">Upcoming</span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-text-secondary">Sep 5 - Sep 15, 2024</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-text-secondary">64</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+<a class="text-primary hover:text-primary-variant" href="#">View</a>
+</td>
+</tr>
+<tr>
+<td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-text-light">Winter Challenge</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm">
+<span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-chip text-black">Completed</span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-text-secondary">Jan 20 - Jan 30, 2024</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-text-secondary">48</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+<a class="text-primary hover:text-primary-variant" href="#">View</a>
+</td>
+</tr>
+<tr>
+<td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-text-light">Spring Invitational</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm">
+<span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-chip text-black">Completed</span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-text-secondary">Apr 10 - Apr 20, 2024</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-text-secondary">24</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+<a class="text-primary hover:text-primary-variant" href="#">View</a>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

@@ -372,6 +372,224 @@ All CRUD endpoints support:
 - `PUT /{id}` - Update existing
 - `DELETE /{id}` - Delete by ID
 
+### Scheduling & Courts Endpoints
+
+#### Match Scheduling
+- `POST /api/v1/scheduling/simulate` - Simulate auto-scheduling (dry-run, no database changes)
+- `POST /api/v1/scheduling/apply` - Apply a simulated schedule using Idempotency-Key header
+- `GET /api/v1/scheduling/matches` - Get scheduled matches with advanced filtering
+
+#### Filtering Parameters (for `/matches` endpoint)
+- `tournamentId` (required) - Filter by tournament
+- `date` (optional) - Filter by specific date (ISO format: 2025-11-03)
+- `courtId` (optional) - Filter by court
+- `categoryId` (optional) - Filter by category
+- `round` (optional) - Filter by round number
+- `status` (optional) - Filter by match status (SCHEDULED, IN_PROGRESS, COMPLETED, CANCELLED)
+- `playerId` (optional) - Filter by player (checks both player1 and player2)
+- `page`, `size`, `sort` - Standard pagination parameters
+
+**Example Request:**
+```bash
+GET /api/v1/scheduling/matches?tournamentId=1&date=2025-11-03&courtId=2&status=SCHEDULED&page=0&size=50&sort=scheduledAt,asc
+```
+
+**Example Response:**
+```json
+{
+  "content": [
+    {
+      "id": 123,
+      "tournamentId": 1,
+      "tournamentName": "City Open 2025",
+      "courtId": 2,
+      "courtName": "Court 2",
+      "player1Id": 10,
+      "player1Name": "Saina Nehwal",
+      "player2Id": 11,
+      "player2Name": "PV Sindhu",
+      "score1": null,
+      "score2": null,
+      "status": "SCHEDULED",
+      "scheduledAt": "2025-11-03T10:00:00",
+      "version": 5
+    }
+  ],
+  "pageable": {
+    "pageNumber": 0,
+    "pageSize": 50
+  },
+  "totalElements": 120,
+  "totalPages": 3
+}
+```
+
+---
+
+## Scheduling System Architecture
+
+### Core Concepts
+
+#### 1. Constraints & Validation
+The scheduling system enforces multiple constraints to ensure valid match scheduling:
+
+**Court Conflicts** (`COURT_CONFLICT`)
+- Same court cannot host overlapping matches
+- Enforced at both service layer (application-level) and database layer (PostgreSQL exclusion constraint)
+- Includes mandatory buffer time between matches on the same court (default: 15 minutes)
+
+**Player Conflicts** (`PLAYER_CONFLICT`)
+- Same player cannot have overlapping matches across any category
+- Minimum rest time enforced between matches (default: 30 minutes)
+- Handles singles and doubles participants correctly
+
+**Court Blackouts** (`BLACKOUT_CONFLICT`)
+- Courts can have unavailability periods (maintenance, reserved, etc.)
+- Stored in `court_availability` table
+- Checked before scheduling any match
+
+**Operating Hours** (`HOURS_CONSTRAINT`) ✅ **NEW**
+- Tournaments can define daily start/end times (e.g., 08:00 - 22:00)
+- Matches cannot be scheduled outside these hours
+- Configurable per tournament in `tournament` table
+- Set to NULL for no restrictions (24/7 operation)
+
+**Optimistic Locking** (`OPTIMISTIC_LOCK`) ✅ **NEW**
+- Prevents lost updates when multiple users edit the same match
+- Uses JPA `@Version` annotation
+- Returns HTTP 409 when version mismatch detected
+- Client must refresh data and retry
+
+#### 2. Database-Level Safety (PostgreSQL Only)
+
+**Exclusion Constraint** ✅ **NEW** (V24 migration)
+```sql
+-- Prevents double-booking at database level
+ALTER TABLE matches
+  ADD CONSTRAINT no_court_overlap_during_match
+  EXCLUDE USING gist (
+    court_id WITH =,
+    tstzrange(scheduled_at, scheduled_end_at, '[)') WITH &&
+  )
+  WHERE (scheduled_at IS NOT NULL AND court_id IS NOT NULL);
+```
+
+This provides an additional safety layer beyond application-level validation. Even if the service layer has a bug, the database will reject conflicting schedules.
+
+**Note:** H2 (used in tests) doesn't support exclusion constraints. For H2 environments, only service-level validation is active.
+
+#### 3. Optimistic Concurrency Control ✅ **NEW**
+
+**How it Works:**
+1. User A loads match (version=5)
+2. User B loads same match (version=5)
+3. User A saves changes → version becomes 6 ✅
+4. User B tries to save with version=5 → HTTP 409 OPTIMISTIC_LOCK ❌
+
+**Error Response Format:**
+```json
+{
+  "timestamp": "2025-10-28T14:30:00",
+  "status": 409,
+  "error": "Conflict",
+  "message": "This record was updated by another user. Please refresh and try again.",
+  "path": "/api/v1/scheduling/matches/123",
+  "code": "OPTIMISTIC_LOCK",
+  "details": {
+    "entityType": "com.example.tournament.domain.Match",
+    "entityId": 123
+  }
+}
+```
+
+**Frontend Handling:**
+- Display user-friendly message: "Match was updated by another user"
+- Provide action buttons: "Refresh Match" / "Reload Schedule"
+- Rollback optimistic UI update to show correct state
+
+#### 4. Auto-Scheduler Algorithm
+
+**Simulate-Then-Apply Workflow:**
+1. **Simulate** (`POST /api/v1/scheduling/simulate`)
+   - Runs scheduling algorithm WITHOUT persisting to database
+   - Creates `SchedulingBatch` record in SIMULATED status
+   - Returns preview with batch UUID (idempotency key)
+   - Shows: scheduled count, unscheduled count, fill percentage, warnings
+
+2. **Apply** (`POST /api/v1/scheduling/apply` with `Idempotency-Key` header)
+   - Applies the simulated schedule to database
+   - Idempotent: calling multiple times with same UUID returns same result
+   - Marks batch as APPLIED
+   - Updates all match records
+
+**Algorithm Features:**
+- **Topological sorting** - respects bracket dependencies (prerequisites must finish first)
+- **Greedy slot allocation** - finds earliest available slot for each match
+- **Performance optimized** - pre-loads all data to eliminate N+1 queries
+- **Conflict-aware** - skips slots with court/player/blackout/hours conflicts
+- **Locked match respect** - skips manually locked matches to preserve manual edits
+
+### Tournament Operating Hours ✅ **NEW**
+
+**Database Schema:**
+```sql
+ALTER TABLE tournament
+ADD COLUMN daily_start_time TIME,
+ADD COLUMN daily_end_time TIME;
+```
+
+**Example Usage:**
+```sql
+-- Regular tournament (8 AM - 10 PM)
+UPDATE tournament SET daily_start_time = '08:00:00', daily_end_time = '22:00:00'
+WHERE id = 1;
+
+-- Morning-only tournament
+UPDATE tournament SET daily_start_time = '07:00:00', daily_end_time = '12:00:00'
+WHERE id = 2;
+
+-- No restrictions (24/7)
+UPDATE tournament SET daily_start_time = NULL, daily_end_time = NULL
+WHERE id = 3;
+```
+
+**Validation Rules:**
+- `scheduled_at.time >= daily_start_time`
+- `scheduled_end_at.time <= daily_end_time`
+- Returns HTTP 400 with code `HOURS_CONSTRAINT` if violated
+
+**Auto-Scheduler Integration:**
+- Automatically skips time slots outside operating hours
+- No manual intervention needed
+
+### Error Codes Reference
+
+| Code | HTTP Status | Description | Resolution |
+|------|-------------|-------------|------------|
+| `COURT_CONFLICT` | 409 Conflict | Court is double-booked or buffer violation | Choose different time or court |
+| `PLAYER_CONFLICT` | 409 Conflict | Player has overlapping match or insufficient rest | Adjust match time to allow rest period |
+| `BLACKOUT_CONFLICT` | 400 Bad Request | Court unavailable during this time | Check court availability schedule |
+| `HOURS_CONSTRAINT` | 400 Bad Request | Match falls outside tournament operating hours | Reschedule within daily hours |
+| `OPTIMISTIC_LOCK` | 409 Conflict | Match was updated by another user | Refresh data and retry operation |
+
+### Troubleshooting
+
+**Q: Why did I get OPTIMISTIC_LOCK error?**
+A: Another user (or another browser tab) edited the same match while you were making changes. Refresh the schedule to see the latest version, then re-apply your changes.
+
+**Q: Why won't this time slot accept my match?**
+A: Check the following:
+1. **Court availability** - Court may have a blackout period
+2. **Operating hours** - Time may fall outside tournament daily hours
+3. **Player conflicts** - One of the players may have a match too close in time
+4. **Court buffer** - Previous match on same court may not have enough buffer time
+
+**Q: How do I override the auto-scheduler for a specific match?**
+A: Use the "Lock Match" feature in the admin UI. Locked matches are skipped by the auto-scheduler and preserve your manual schedule decisions.
+
+**Q: Can I have different operating hours for different days?**
+A: Not currently. Operating hours are applied uniformly to all days. Future enhancement: per-day-of-week hours (weekday vs weekend).
+
 ---
 
 ## Testing Strategy

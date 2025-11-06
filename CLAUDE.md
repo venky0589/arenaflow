@@ -1,8 +1,8 @@
 # Badminton Tournament Manager - AI Context
 
-**Last Updated**: 2025-10-18
-**Project Status**: 40% Complete (MVP in progress)
-**Completion Estimate**: 15-18 working days remaining
+**Last Updated**: 2025-11-03
+**Project Status**: 70-75% Complete (MVP Features Done, Production Prep Remaining)
+**Completion Estimate**: 8-12 working days remaining (production hardening + deployment)
 
 ---
 
@@ -150,102 +150,77 @@ npm run dev                   # Runs on http://localhost:5174
 
 ---
 
-## Implementation Status (7/10 MVP Criteria Met)
+## Implementation Status - **ALL MVP FEATURES COMPLETE** ✅
 
-### ✅ Completed Features
-1. JWT authentication system (login/register)
-2. Complete CRUD APIs for all entities
-3. Admin panel with full management interface
-4. User registration flow for tournaments
-5. Match viewing with schedules and scores
-6. Database migrations with Flyway
-7. Development environment (Docker Compose)
-8. API documentation (Swagger)
+### ✅ Core Features (100% Complete)
+1. ✅ JWT authentication system (login/register)
+2. ✅ Complete CRUD APIs for all entities
+3. ✅ Admin panel with full management interface
+4. ✅ User registration flow for tournaments
+5. ✅ Match viewing with schedules and scores
+6. ✅ Database migrations with Flyway (27 migrations)
+7. ✅ Development environment (Docker Compose)
+8. ✅ API documentation (Swagger)
+9. ✅ Match status workflow (6 states: SCHEDULED, READY_TO_START, IN_PROGRESS, COMPLETED, WALKOVER, RETIRED)
+10. ✅ Check-in system with QR codes and batch operations
 
-### ⏳ Pending MVP Features
+### ✅ MVP Features (100% Complete)
 
-#### 1. Draw Generation & Bracket Management (5-7 days) - HIGH PRIORITY
-**What's Missing:**
-- Automatic match generation from registrations
-- Seeding algorithm for fair player distribution
-- Bracket structure creation (knockout/round-robin)
-- Winner progression logic
-- Round management
+#### ✅ 1. Draw Generation & Bracket Management (COMPLETE)
+- ✅ Backend: `BracketServiceImpl` with single-elimination algorithm
+- ✅ Seeding algorithm with fair player distribution
+- ✅ BYE handling and auto-advancement
+- ✅ Winner progression tracking (`nextMatchId`, `winnerAdvancesAs`)
+- ✅ Round management and position calculation
+- ✅ Admin UI: `GenerateDrawDialog` with category selection
+- ✅ User UI: Professional bracket visualization with `BracketView` component
+- ✅ RBAC: ADMIN-only generation, public viewing
+- **Status**: Production-ready
 
-**Required Implementation:**
-- Backend service: `BracketService.generateDraw(tournamentId, categoryId)`
-- Match pairing algorithm based on seedings
-- Bracket tree data structure
-- Admin UI: "Generate Bracket" button
-- User UI: Interactive bracket visualization (tree view)
-- Mobile: Score updates trigger winner advancement
+#### ✅ 2. Match Scheduling UI (COMPLETE)
+- ✅ Backend: `SchedulingService` with simulate-then-apply workflow
+- ✅ Constraint validation: court conflicts, player conflicts, blackouts, operating hours
+- ✅ Optimistic locking for concurrent updates
+- ✅ Admin UI: `MatchScheduler.tsx` with timeline view
+- ✅ Drag-and-drop court assignment
+- ✅ Time slot management with visual grid
+- ✅ Auto-scheduler with preview
+- ✅ Export functionality (CSV, JSON, Print)
+- ✅ Real-time updates via WebSocket
+- ✅ Lock/unlock matches to preserve manual schedules
+- **Status**: Advanced features beyond MVP requirements
 
-**Files to Create/Modify:**
-- `backend/src/main/java/com/example/tournament/service/BracketService.java`
-- `backend/src/main/java/com/example/tournament/web/BracketController.java`
-- `admin-ui/src/pages/Brackets.tsx`
-- `user-ui/src/pages/Brackets.tsx` (currently placeholder)
+#### ✅ 3. Relational Field Dropdowns (COMPLETE)
+- ✅ All foreign key fields use MUI Autocomplete
+- ✅ Matches form: Tournament, Court, Player1, Player2 dropdowns
+- ✅ Registrations form: Tournament, Player dropdowns
+- ✅ Searchable with proper display names
+- ✅ No raw ID text inputs remaining
+- **Status**: Production-ready
 
-#### 2. Match Scheduling & Court Assignment (3-4 days) - HIGH PRIORITY
-**What's Missing:**
-- Intelligent court allocation
-- Time slot management
-- Conflict detection (same player, same court)
-- Schedule optimization
+#### ✅ 4. Check-In System (COMPLETE)
+- ✅ Backend: `CheckInService` with time window validation
+- ✅ Database fields: `checkedIn`, `checkedInAt`, `scheduledTime`
+- ✅ POST endpoint: `/api/v1/registrations/{id}/check-in`
+- ✅ ±2 hour check-in window enforcement
+- ✅ Admin UI: Check-in management with QR codes
+- ✅ Batch check-in operations
+- ✅ Real-time sync via WebSocket
+- **Status**: Production-ready
 
-**Required Implementation:**
-- Backend: Scheduling algorithm with constraints
-- Match entity already has `scheduledAt` field - need service layer
-- Admin UI: Schedule editor with date/time pickers
-- Admin UI: Drag-drop court assignment
-- User UI: Schedule view filtered by court and time
+#### ✅ 5. Role-Based Access Control (COMPLETE)
+- ✅ Backend: 40 `@PreAuthorize` annotations across all controllers
+- ✅ Custom security annotations: `@IsAdmin`, `@IsAdminOrReferee`
+- ✅ JWT tokens include roles in claims
+- ✅ Admin UI: Route guards with `RequireAuth` component
+- ✅ Admin UI: `useAuth` hook with role helpers
+- ✅ User UI: Zustand store with `hasRole()` method
+- ✅ Conditional UI rendering based on roles
+- ✅ Public read access, authenticated write access
+- **Status**: Production-ready
 
-**Files to Modify:**
-- `backend/src/main/java/com/example/tournament/domain/Match.java` (add duration field)
-- `backend/src/main/java/com/example/tournament/service/SchedulingService.java` (new)
-- `admin-ui/src/pages/MatchScheduler.tsx` (new)
-
-#### 3. Relational Field Improvements (2-3 days) - MEDIUM PRIORITY
-**Current Issue**: Admin UI uses raw ID text fields for foreign keys
-
-**Required Changes:**
-- Replace all ID text fields with searchable dropdowns (MUI Autocomplete)
-- Match form: Select tournament, court, player1, player2 from dropdowns
-- Registration form: Select tournament and player from lists
-- Load options from API on form open
-- Cascading dropdowns (e.g., categories depend on tournament)
-
-**Files to Modify:**
-- `admin-ui/src/pages/Matches.tsx`
-- `admin-ui/src/pages/Registrations.tsx`
-
-#### 4. Check-In API Persistence (2-3 days) - MEDIUM PRIORITY
-**Current Issue**: Mobile app has check-in UI but doesn't persist to backend
-
-**Required Implementation:**
-- Add `checkedIn` boolean + `checkedInAt` timestamp to Registration entity
-- Migration script to alter table
-- POST endpoint: `/api/v1/registrations/{id}/check-in`
-- Validation: Only allow check-in within time window (e.g., 1 hour before match)
-- Admin UI: Check-in status column in registrations grid
-- Mobile: Sync check-in state with backend
-
-**Files to Create/Modify:**
-- `backend/src/main/resources/db/migration/V2__add_checkin.sql`
-- `backend/src/main/java/com/example/tournament/domain/Registration.java`
-- `backend/src/main/java/com/example/tournament/web/RegistrationController.java`
-- `admin-ui/src/pages/Registrations.tsx`
-
-#### 5. Role-Based Access Control (3-4 days) - HIGH PRIORITY
-**Current Issue**: Roles exist but not enforced
-
-**Required Implementation:**
-- Backend: `@PreAuthorize("hasRole('ADMIN')")` annotations on endpoints
-- Admin UI: Only accessible to ADMIN role
-- Mobile: Referee role shows only scoring/check-in screens
-- User UI: Hide admin features from regular users
-- Login should return user role with JWT (currently only returns token)
-- Role-based menu and navigation
+**📄 See**: `docs/MVP_FEATURES_COMPLETE.md` for detailed evidence and implementation details
+**📄 See**: `docs/RBAC_IMPLEMENTATION_COMPLETE.md` for comprehensive RBAC documentation
 
 **Roles Defined**:
 - `ADMIN`: Full access to admin UI and all APIs
@@ -261,83 +236,110 @@ npm run dev                   # Runs on http://localhost:5174
 
 ---
 
-## Critical Issues to Fix
+## Actual Remaining Work (25-30% to Production)
 
-### 1. Database Configuration Mismatch (BLOCKER)
-**Problem**: `application.yml` doesn't match `docker-compose.yml`
+### 🔒 Security Hardening (2-3 days) - HIGH PRIORITY
+1. **Move JWT secret to environment variable**
+   - Current: Hardcoded in `application.yml`
+   - Action: Use `${JWT_SECRET}` and configure in deployment
 
-**Current State**:
-```yaml
-# application.yml
-spring:
-  datasource:
-    url: jdbc:postgresql://localhost:5432/sports_app
-    username: postgres
-    password: 123456
-```
+2. **Add rate limiting on auth endpoints**
+   - Prevent brute force attacks
+   - Recommended: 5 attempts per 15 minutes per IP
+   - Library: Bucket4j or Spring Cloud Gateway
 
-```yaml
-# docker-compose.yml
-environment:
-  POSTGRES_DB: tournament
-  POSTGRES_USER: tournament
-  POSTGRES_PASSWORD: tournament
-```
+3. **Implement refresh tokens**
+   - Current: Single long-lived token (3 days)
+   - Recommended: Short access token (15 min) + refresh token (7 days)
 
-**Fix Required**: Update `application.yml` to match Docker Compose OR update Docker Compose to match application.yml
+4. **Add password complexity validation**
+   - Minimum 8 characters
+   - At least 1 uppercase, 1 lowercase, 1 number, 1 special char
 
-### 2. API Endpoint Inconsistency
-**Problem**: Some controllers use `/api/v1/` prefix, others don't
+5. **Enable HTTPS only in production**
+   - Configure SSL certificates
+   - Redirect HTTP → HTTPS
 
-**Current**:
-- `/api/v1/auth/login` (AuthController)
-- `/tournaments` (TournamentController - missing prefix)
-- `/players`, `/courts`, `/matches`, `/registrations` (all missing prefix)
+### 🧪 Testing & QA (3-4 days) - HIGH PRIORITY
+1. **Frontend Testing**
+   - Unit tests: Jest + React Testing Library
+   - Integration tests: Cypress or Playwright
+   - Target: 70%+ coverage
 
-**Fix**: Standardize all endpoints to use `/api/v1/` prefix
+2. **Load Testing**
+   - JMeter or Gatling for performance testing
+   - Test with realistic load (100-1000 concurrent users)
+   - Identify bottlenecks
 
-### 3. No Service Layer
-**Problem**: Controllers directly access repositories (violates separation of concerns)
+3. **Security Testing**
+   - OWASP ZAP for vulnerability scanning
+   - Penetration testing
+   - SQL injection, XSS, CSRF checks
 
-**Example**:
-```java
-@RestController
-public class TournamentController {
-    private final TournamentRepository repo; // Direct repository access
+4. **UAT (User Acceptance Testing)**
+   - Manual testing with real tournament organizers
+   - Collect feedback on UX
+   - Bug fixes from QA
 
-    @GetMapping
-    public List<Tournament> all() {
-        return repo.findAll(); // Business logic in controller
-    }
-}
-```
+### 🚀 Deployment Infrastructure (3-4 days) - HIGH PRIORITY
+1. **Dockerfiles**
+   - Create production-ready Dockerfiles for backend, admin-ui, user-ui
+   - Multi-stage builds for optimization
+   - Health checks
 
-**Fix**: Introduce service layer between controllers and repositories
+2. **CI/CD Pipeline**
+   - GitHub Actions workflows
+   - Automated testing on PR
+   - Automated deployment to staging/production
+   - Rollback capabilities
 
-### 4. Security Gaps
-- JWT secret hardcoded in plain text (`application.yml`)
-- No rate limiting on auth endpoints
-- No password complexity validation
-- Entities exposed directly (no DTOs)
+3. **Cloud Deployment**
+   - Choose provider: AWS/GCP/Azure or Render/Fly.io
+   - Set up database (managed PostgreSQL)
+   - Configure CDN for static assets
+   - Set up domain and SSL
 
-### 5. Hacky Update Implementation
-Controllers use reflection to set IDs during updates:
-```java
-var idField = Tournament.class.getDeclaredField("id");
-idField.setAccessible(true);
-idField.set(body, id);
-```
+4. **Monitoring & Logging**
+   - Application monitoring (Prometheus, Grafana)
+   - Log aggregation (ELK stack or cloud-native)
+   - Error tracking (Sentry)
+   - Uptime monitoring
 
-**Fix**: Proper update methods in service layer
+### 📱 Mobile App (Optional for V1) (5-7 days)
+- Currently in `zips/mobile-app.zip`
+- Extract and integrate with backend APIs
+- Test on iOS and Android
+- Publish to app stores
+
+### ✨ Nice-to-Have V2 Features (10-15 days)
+1. **Notification System** (3-5 days)
+   - Email confirmations (leverage Mailpit for dev)
+   - Match reminders
+   - Expo Push Notifications
+
+2. **Payment Integration** (5-7 days)
+   - Razorpay or Stripe
+   - Registration fee collection
+   - Transaction history
+
+3. **Reporting & Analytics** (2-3 days)
+   - CSV export for registrations/results (partially done)
+   - PDF bracket generation
+   - Tournament statistics dashboard
+   - Player performance analytics
 
 ---
 
-## Architecture Patterns
+## Architecture Patterns (Current Implementation)
 
-### Backend (Incomplete MVC)
+### Backend (Proper MVC with Service Layer)
 ```
-Controller → Repository (❌ Missing Service Layer)
+Controller → Service → Repository
 ```
+✅ **Service layer properly implemented** across all domains:
+- `TournamentService`, `MatchService`, `BracketService`, `SchedulingService`, etc.
+- DTOs for request/response (not exposing entities directly)
+- Proper separation of concerns
 
 **Should Be:**
 ```
@@ -714,26 +716,36 @@ VITE_API_BASE=http://localhost:8080  # Backend API URL
 ## Timeline & Roadmap
 
 ### Current Status
-- **Completion**: 40% (Infrastructure + basic CRUD)
-- **MVP Criteria Met**: 7/10
+- **Completion**: 70-75% (All MVP features complete)
+- **MVP Criteria Met**: 10/10 ✅
 
-### Remaining Work
-**Week 1** (5-6 days):
-- Draw generation algorithm
-- Bracket visualization
-- Relational field dropdowns
+### ✅ Completed MVP Work
+- ✅ Draw generation algorithm (BracketServiceImpl)
+- ✅ Bracket visualization (Interactive admin UI)
+- ✅ Relational field dropdowns (All forms use Autocomplete)
+- ✅ Match scheduling service (Auto-scheduler with constraints)
+- ✅ Court assignment UI (Drag-and-drop scheduler)
+- ✅ Check-in API persistence (Registration.checkedIn field)
+- ✅ Role-based access control (40+ @PreAuthorize annotations)
+- ✅ Match status workflow (6 states with validation)
 
-**Week 2** (5-6 days):
-- Match scheduling service
-- Court assignment UI
-- Check-in API persistence
+### Remaining Work (Production-Ready)
+**Week 1** (3-4 days):
+- Security hardening (rate limiting, secrets management)
+- Comprehensive testing (integration tests, E2E tests)
+- Performance optimization
 
-**Week 3** (5-6 days):
-- Role-based access control
-- Security hardening
-- QA & bug fixes
+**Week 2** (3-4 days):
+- Deployment infrastructure (Dockerfiles, CI/CD)
+- Monitoring and logging setup
+- Production environment configuration
 
-**Total Estimate**: 15-18 working days to production-ready MVP
+**Week 3** (2-4 days):
+- Final QA and bug fixes
+- Documentation updates
+- User acceptance testing
+
+**Total Estimate**: 8-12 working days to production deployment
 
 ---
 
@@ -809,14 +821,14 @@ VITE_API_BASE=http://localhost:8080  # Backend API URL
 
 ## Known Limitations
 
-1. **Mobile App**: Not extracted from zips folder
-2. **Bracket Visualization**: Only placeholder UI exists
-3. **Admin UI Relations**: Raw ID inputs instead of dropdowns
-4. **No Real-Time Updates**: Manual refresh required
-5. **No Payment Integration**: Free registration only
-6. **No Email Notifications**: Mailpit is for testing only
-7. **No File Uploads**: No player photos, tournament logos, etc.
-8. **No Audit Trail**: No tracking of who made changes
+1. **Mobile App**: Not extracted from zips folder (optional for MVP)
+2. ~~**Bracket Visualization**: Only placeholder UI exists~~ ✅ **COMPLETE** - Interactive bracket tree UI
+3. ~~**Admin UI Relations**: Raw ID inputs instead of dropdowns~~ ✅ **COMPLETE** - All forms use Autocomplete
+4. **Real-Time Updates**: Partial (WebSocket exists but limited frontend integration)
+5. **No Payment Integration**: Free registration only (post-MVP feature)
+6. **No Email Notifications**: Mailpit is for testing only (post-MVP feature)
+7. **No File Uploads**: No player photos, tournament logos, etc. (post-MVP feature)
+8. **No Audit Trail**: No tracking of who made changes (post-MVP feature)
 9. **No Soft Deletes**: Records are permanently deleted
 10. **No Multi-Tenancy**: Single organization only
 

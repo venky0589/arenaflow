@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="520">
+<rect x="0" y="0" width="800" height="520" fill="#1E1E1E"/>
+<text x="24" y="36" font-size="18" fill="#EAEAEA" font-family="Inter, Arial">Mock: Create Team Dialog (dark)</text>
+<rect x="24" y="48" width="752" height="448" rx="16" ry="16" fill="#1E1E1E" stroke="#2A2A2A" />
+<text x="56" y="88" font-size="16" fill="#EAEAEA" font-family="Inter, Arial" font-weight="600">Create Team</text>
+<rect x="56" y="110" width="320" height="56" rx="6" ry="6" fill="#232323" stroke="#2A2A2A"/>
+<text x="72" y="143" font-size="14" fill="#EAEAEA" font-family="Inter, Arial">Partner 1</text>
+<rect x="56" y="182" width="320" height="56" rx="6" ry="6" fill="#232323" stroke="#D32F2F" stroke-width="2"/>
+<text x="72" y="215" font-size="14" fill="#EAEAEA" font-family="Inter, Arial">Partner 2</text>
+<text x="56" y="250" font-size="12" fill="#D32F2F" font-family="Inter, Arial">Both partners must be different.</text>
+<rect x="56" y="280" width="88" height="40" rx="8" ry="8" fill="#64B5F6"/><text x="82" y="306" font-size="14" fill="#fff" font-family="Inter, Arial">Save</text>
+<text x="160" y="306" font-size="14" fill="#64B5F6" font-family="Inter, Arial">Cancel</text>
+</svg>

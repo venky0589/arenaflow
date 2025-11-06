@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="520">
+<rect x="0" y="0" width="800" height="520" fill="#FFFFFF"/>
+<text x="24" y="36" font-size="18" fill="#111827" font-family="Inter, Arial">Mock: Registrations Grid (light)</text>
+<rect x="24" y="48" width="752" height="448" rx="16" ry="16" fill="#FFFFFF" stroke="#E5E7EB" />
+<text x="56" y="88" font-size="16" fill="#111827" font-family="Inter, Arial" font-weight="600">Registrations</text>
+<rect x="56" y="100" width="180" height="36" rx="18" ry="18" fill="#F9FAFB" stroke="#E5E7EB"/>
+<rect x="56" y="100" width="90" height="36" rx="18" ry="18" fill="#fff" stroke="#E5E7EB"/><text x="86" y="123" font-size="12" fill="#111827" font-family="Inter, Arial">Singles</text>
+<text x="146" y="123" font-size="12" fill="#111827" font-family="Inter, Arial">Teams</text>
+<rect x="56" y="148" width="688" height="36" fill="#F3F4F6" stroke="#E5E7EB"/>
+<text x="72" y="170" font-size="12" fill="#111827" font-family="Inter, Arial" font-weight="600">Participant</text>
+<text x="420" y="170" font-size="12" fill="#111827" font-family="Inter, Arial" font-weight="600">Category</text>
+<text x="580" y="170" font-size="12" fill="#111827" font-family="Inter, Arial" font-weight="600">Actions</text>
+<rect x="56" y="184" width="688" height="44" fill="#fff" stroke="#E5E7EB"/>
+<text x="72" y="210" font-size="14" fill="#111827" font-family="Inter, Arial">Smitha/Arjun</text>
+<rect x="400" y="194" width="28" height="20" rx="10" fill="#2E7D32"/><text x="406" y="208" font-size="12" fill="#fff" font-family="Inter, Arial">D</text>
+<rect x="436" y="194" width="40" height="20" rx="10" fill="#111827"/><text x="448" y="208" font-size="12" fill="#fff" font-family="Inter, Arial">MD</text>
+<rect x="580" y="196" width="60" height="20" rx="6" fill="#fff" stroke="#E5E7EB"/><text x="594" y="210" font-size="12" fill="#111827" font-family="Inter, Arial">Edit</text>
+<rect x="56" y="228" width="688" height="44" fill="#fff" stroke="#E5E7EB"/>
+<text x="72" y="254" font-size="14" fill="#111827" font-family="Inter, Arial">R. Singh</text>
+<rect x="400" y="238" width="28" height="20" rx="10" fill="#0288D1"/><text x="407" y="252" font-size="12" fill="#fff" font-family="Inter, Arial">S</text>
+<rect x="436" y="238" width="40" height="20" rx="10" fill="#111827"/><text x="448" y="252" font-size="12" fill="#fff" font-family="Inter, Arial">WD</text>
+</svg>

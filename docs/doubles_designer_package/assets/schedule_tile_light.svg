@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="520">
+<rect x="0" y="0" width="800" height="520" fill="#FFFFFF"/>
+<text x="24" y="36" font-size="18" fill="#111827" font-family="Inter, Arial">Mock: Schedule Tile (light)</text>
+<rect x="24" y="48" width="752" height="448" rx="16" ry="16" fill="#FFFFFF" stroke="#E5E7EB" />
+<text x="56" y="88" font-size="16" fill="#111827" font-family="Inter, Arial" font-weight="600">Schedule Timeline Item</text>
+<rect x="56" y="110" width="280" height="40" rx="8" ry="8" fill="#fff" stroke="#E5E7EB"/>
+<text x="64" y="136" font-size="14" fill="#111827" font-family="Inter, Arial">Smitha/Arjun</text>
+<text x="220" y="136" font-size="12" fill="#6B7280" font-family="Inter, Arial">Court 2</text>
+<rect x="360" y="110" width="280" height="40" rx="8" ry="8" fill="#fff" stroke="#E5E7EB"/>
+<circle cx="368" cy="124" r="6" fill="#F57C00"/>
+<text x="380" y="136" font-size="14" fill="#111827" font-family="Inter, Arial">Kumar/Shetty</text>
+<text x="540" y="136" font-size="12" fill="#6B7280" font-family="Inter, Arial">Court 1</text>
+<text x="360" y="160" font-size="12" fill="#F57C00" font-family="Inter, Arial">Tooltip: Overlaps for Partner: Shetty</text>
+</svg>

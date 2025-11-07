@@ -1,8 +1,8 @@
 # Badminton Tournament Manager - AI Context
 
-**Last Updated**: 2025-11-03
-**Project Status**: 70-75% Complete (MVP Features Done, Production Prep Remaining)
-**Completion Estimate**: 8-12 working days remaining (production hardening + deployment)
+**Last Updated**: 2025-11-07
+**Project Status**: 75-80% Complete (MVP Features + Bracket Viewer Done, Production Prep Remaining)
+**Completion Estimate**: 6-10 working days remaining (production hardening + deployment)
 
 ---
 
@@ -62,9 +62,10 @@ sports-app/
 │
 ├── admin-ui/             # Admin management interface
 │   ├── src/
-│   │   ├── pages/        # Tournaments, Players, Courts, Matches, Registrations
-│   │   ├── components/   # CrudTable, FormDialog, Layout
+│   │   ├── pages/        # Tournaments, Players, Courts, Matches, Registrations, Brackets
+│   │   ├── components/   # CrudTable, FormDialog, Layout, brackets/
 │   │   ├── auth/         # Login, RequireAuth
+│   │   ├── utils/        # bracket.ts (round labels)
 │   │   └── api/          # Axios client
 │   ├── package.json
 │   ├── .env.example
@@ -172,10 +173,35 @@ npm run dev                   # Runs on http://localhost:5174
 - ✅ BYE handling and auto-advancement
 - ✅ Winner progression tracking (`nextMatchId`, `winnerAdvancesAs`)
 - ✅ Round management and position calculation
-- ✅ Admin UI: `GenerateDrawDialog` with category selection
+- ✅ Admin UI:
+  - `GenerateDrawDialog` with category selection
+  - **NEW**: Full `Brackets` page at `/brackets` with production bracket viewer
+  - Tournament/category selectors, statistics cards
+  - Generate, Refresh, and Delete Draft functionality
 - ✅ User UI: Professional bracket visualization with `BracketView` component
-- ✅ RBAC: ADMIN-only generation, public viewing
+- ✅ RBAC: ADMIN-only generation and management, public viewing in user-UI
 - **Status**: Production-ready
+
+**Admin UI Bracket Viewer Features** (NEW - 2025-11-07):
+- **Route**: `/brackets` (SYSTEM_ADMIN only)
+- **Components**:
+  - `src/pages/Brackets.tsx` - Main page (350 lines)
+  - `src/components/brackets/BracketView.tsx` - Visualization (225 lines)
+  - `src/utils/bracket.ts` - Round label utility
+- **Features**:
+  - Tournament and category dropdown selectors
+  - Real-time bracket data from API (`GET /api/v1/categories/{id}/bracket`)
+  - Bracket statistics: participants, size, rounds, total matches
+  - Generate Draw button (reuses existing GenerateDrawDialog)
+  - Delete Draft button with confirmation dialog
+  - Horizontal scrolling bracket visualization
+  - Winner highlighting (green borders/backgrounds)
+  - Match status chips (color-coded)
+  - Round labels (Final, Semifinals, Quarterfinals, Round of X)
+  - Loading/error/empty states
+  - Round Robin format detection with V2 alert
+- **Navigation**: Admin UI > Brackets (nav bar after Categories)
+- **Note**: User UI already has complete bracket viewer (public access)
 
 #### ✅ 2. Match Scheduling UI (COMPLETE)
 - ✅ Backend: `SchedulingService` with simulate-then-apply workflow
@@ -721,7 +747,8 @@ VITE_API_BASE=http://localhost:8080  # Backend API URL
 
 ### ✅ Completed MVP Work
 - ✅ Draw generation algorithm (BracketServiceImpl)
-- ✅ Bracket visualization (Interactive admin UI)
+- ✅ Bracket visualization (Admin UI + User UI - both production-ready)
+- ✅ Admin UI bracket viewer page (/brackets) - NEW 2025-11-07
 - ✅ Relational field dropdowns (All forms use Autocomplete)
 - ✅ Match scheduling service (Auto-scheduler with constraints)
 - ✅ Court assignment UI (Drag-and-drop scheduler)
@@ -822,7 +849,7 @@ VITE_API_BASE=http://localhost:8080  # Backend API URL
 ## Known Limitations
 
 1. **Mobile App**: Not extracted from zips folder (optional for MVP)
-2. ~~**Bracket Visualization**: Only placeholder UI exists~~ ✅ **COMPLETE** - Interactive bracket tree UI
+2. ~~**Bracket Visualization**: Only placeholder UI exists~~ ✅ **COMPLETE** - Both Admin UI and User UI have production-ready bracket viewers
 3. ~~**Admin UI Relations**: Raw ID inputs instead of dropdowns~~ ✅ **COMPLETE** - All forms use Autocomplete
 4. **Real-Time Updates**: Partial (WebSocket exists but limited frontend integration)
 5. **No Payment Integration**: Free registration only (post-MVP feature)

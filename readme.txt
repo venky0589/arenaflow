@@ -25,7 +25,7 @@ mvn spring-boot:run
 4. Verify:
 
 * Swagger: [http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html)
-* Default admin: `admin@example.com` / `admin123`
+* Default admin: `admin@example.com` / `password123`
 * Postman: import `postman_collection.json` (in backend zip)
 
 ### Quick API smoke test (no Postman)
@@ -34,7 +34,7 @@ mvn spring-boot:run
 # login (admin)
 curl -s -X POST http://localhost:8080/auth/login \
   -H 'Content-Type: application/json' \
-  -d '{"email":"admin@example.com","password":"admin123"}' | jq .
+  -d '{"email":"admin@example.com","password":"password123"}' | jq .
 # copy token value to TOKEN variable:
 TOKEN=PASTE_TOKEN_HERE
 # list players
@@ -62,7 +62,7 @@ npm run dev
 ```
 
 4. Open: [http://localhost:5173](http://localhost:5173)
-5. Login with **[admin@example.com](mailto:admin@example.com) / admin123**.
+5. Login with **[admin@example.com](mailto:admin@example.com) / password123**.
 6. Try CRUD (Players/Tournaments/etc.). Double-click a row to edit.
 
 ---
@@ -120,7 +120,7 @@ EXPO_PUBLIC_API_BASE=http://YOUR_LAN_IP:8080 npm start
 # 5) Seed Data (already included)
 
 * 2 tournaments, 4 players, 2 courts.
-* Admin user pre-seeded (`admin@example.com` / `admin123`).
+* Admin user pre-seeded (`admin@example.com` / `password123`).
 
 ---
 

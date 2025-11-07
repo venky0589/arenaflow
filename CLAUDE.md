@@ -105,7 +105,7 @@ mvn spring-boot:run           # Run Spring Boot
 # - Mailpit UI: http://localhost:8025
 ```
 
-**Default Admin User**: `admin@example.com` / `admin123`
+**Default Admin User**: `admin@example.com` / `password123`
 
 ### 2. Admin UI
 ```bash

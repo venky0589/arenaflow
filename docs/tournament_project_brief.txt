@@ -48,7 +48,7 @@ A full-stack tournament management system designed for badminton competitions, e
 1. **Authentication System**
    - JWT-based login and registration endpoints
    - Token generation and validation
-   - Pre-seeded admin user (admin@example.com / admin123)
+   - Pre-seeded admin user (admin@example.com / password123)
 
 2. **Core Entities**
    - `Tournament`: Tournament metadata and configuration

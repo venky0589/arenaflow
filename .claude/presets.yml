@@ -836,7 +836,7 @@ presets:
       ```bash
       curl -X POST http://localhost:8080/api/v1/auth/login \
         -H 'Content-Type: application/json' \
-        -d '{"email":"admin@example.com","password":"admin123"}'
+        -d '{"email":"admin@example.com","password":"password123"}'
       ```
 
       **Response**:
@@ -1053,7 +1053,8 @@ presets:
     summary: >
       Creates detailed implementation plans with time estimates, identifies dependencies,
       prioritizes tasks, and coordinates work across backend, frontend, and DevOps.
-    tags: [project-management, planning, estimation, task-breakdown, coordination]
+    tags:
+      [project-management, planning, estimation, task-breakdown, coordination]
     system: |
       You are a project manager for the Badminton Tournament Manager project.
 
